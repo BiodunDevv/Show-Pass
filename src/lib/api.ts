@@ -1,7 +1,8 @@
 // API configuration utilities
 export const API_CONFIG = {
   BASE_URL:
-    process.env.NEXT_PUBLIC_API_URL || "https://showpass-backend.onrender.com",
+    process.env.NEXT_PUBLIC_API_URL ||
+    "https://showpass-backend-production.up.railway.app",
   ENDPOINTS: {
     AUTH: {
       LOGIN: "/api/auth/login",
@@ -10,6 +11,7 @@ export const API_CONFIG = {
       RESET_PASSWORD: "/api/auth/reset-password",
       VERIFY_EMAIL: "/api/auth/verify-email",
       RESEND_VERIFICATION: "/api/auth/resend-verification",
+      RESEND_VERIFICATION_EMAIL: "/api/auth/resend-verification-email",
     },
     USER: {
       PROFILE: "/api/user-details/profile",

@@ -73,9 +73,21 @@ export default function SignInPage() {
     try {
       await login(email, password);
       router.push("/");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login failed:", error);
-      // Error is already set in the store
+
+      // Check if it's a 403 error (email verification required)
+      if (
+        error.message?.includes("403") ||
+        error.message?.toLowerCase().includes("verification") ||
+        error.message?.toLowerCase().includes("verify")
+      ) {
+        // Redirect to verify page with email
+        router.push(`/auth/verify?email=${encodeURIComponent(email)}`);
+        return;
+      }
+
+      // Error is already set in the store for other errors
     }
   };
 
@@ -282,61 +294,44 @@ export default function SignInPage() {
 
       {/* Right Side - Image Slideshow (Hidden on mobile) */}
       <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
-        {/* CSS animations */}
-        <style jsx>{`
-          @keyframes fadeSlide {
-            0% {
-              opacity: 0;
-              transform: scale(1.1);
-            }
-            100% {
-              opacity: 1;
-              transform: scale(1);
-            }
-          }
-
-          @keyframes slideUp {
-            0% {
-              opacity: 0;
-              transform: translateY(30px);
-            }
-            100% {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-
-          .image-animate {
-            animation: fadeSlide 0.8s ease-out;
-          }
-
-          .content-animate {
-            animation: slideUp 0.5s ease-out 0.3s both;
-          }
-        `}</style>
-
-        <div className="absolute inset-0 image-animate">
-          <Image
-            src={heroImages[currentImageIndex].url}
-            alt={heroImages[currentImageIndex].title}
-            fill
-            className="object-cover"
-            priority
+        <AnimatePresence mode="wait">
+          <motion.div
             key={currentImageIndex}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent" />
-        </div>
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+            className="absolute inset-0"
+          >
+            <Image
+              src={heroImages[currentImageIndex].url}
+              alt={heroImages[currentImageIndex].title}
+              fill
+              className="object-cover"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent" />
+          </motion.div>
+        </AnimatePresence>
 
         {/* Image Content Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-          <div key={`content-${currentImageIndex}`} className="content-animate">
-            <h3 className="text-3xl font-bold mb-2">
-              {heroImages[currentImageIndex].title}
-            </h3>
-            <p className="text-gray-300 text-lg">
-              {heroImages[currentImageIndex].description}
-            </p>
-          </div>
+        <div className="absolute bottom-0 left-0 right-0 p-8 text-white z-10">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`content-${currentImageIndex}`}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -30 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              <h3 className="text-3xl font-bold mb-2">
+                {heroImages[currentImageIndex].title}
+              </h3>
+              <p className="text-gray-300 text-lg">
+                {heroImages[currentImageIndex].description}
+              </p>
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         {/* Navigation Controls */}

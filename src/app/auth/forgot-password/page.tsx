@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/useAuthStore";
 import Link from "next/link";
 import {
   Mail,
@@ -10,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Check,
+  AlertCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -34,9 +36,10 @@ const heroImages = [
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const { forgotPassword, isLoading, error } = useAuthStore();
   const router = useRouter();
 
   // Auto-rotate hero images
@@ -49,16 +52,13 @@ export default function ForgotPasswordPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await forgotPassword(email);
       setIsSubmitted(true);
     } catch (error) {
       console.error("Forgot password error:", error);
-    } finally {
-      setIsLoading(false);
+      // Error is handled by the auth store
     }
   };
 
@@ -119,8 +119,8 @@ export default function ForgotPasswordPage() {
               key={currentImageIndex}
               initial={{ opacity: 0, scale: 1.1 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.7 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.8, ease: "easeInOut" }}
               className="absolute inset-0"
             >
               <Image
@@ -130,70 +130,55 @@ export default function ForgotPasswordPage() {
                 className="object-cover"
                 priority
               />
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-900/80 via-pink-900/60 to-slate-900/80" />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent" />
             </motion.div>
           </AnimatePresence>
 
-          <div className="relative z-10 flex flex-col justify-between h-full p-12 text-white">
-            <div>
-              <Link href="/" className="inline-flex items-center gap-3 group">
-                <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <Ticket className="w-6 h-6 text-white" />
-                </div>
-                <span className="text-2xl font-bold">ShowPass</span>
-              </Link>
-            </div>
-
-            <div className="space-y-6">
-              <motion.h1
-                key={`title-${currentImageIndex}`}
-                initial={{ opacity: 0, y: 20 }}
+          {/* Image Content Overlay */}
+          <div className="absolute bottom-0 left-0 right-0 p-8 text-white z-10">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`content-${currentImageIndex}`}
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -30 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
-                className="text-4xl font-bold leading-tight"
               >
-                {heroImages[currentImageIndex].title}
-              </motion.h1>
-              <motion.p
-                key={`desc-${currentImageIndex}`}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.5 }}
-                className="text-xl text-gray-200"
-              >
-                {heroImages[currentImageIndex].description}
-              </motion.p>
-            </div>
+                <h3 className="text-3xl font-bold mb-2">
+                  {heroImages[currentImageIndex].title}
+                </h3>
+                <p className="text-gray-300 text-lg">
+                  {heroImages[currentImageIndex].description}
+                </p>
+              </motion.div>
+            </AnimatePresence>
+          </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex space-x-2">
-                {heroImages.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentImageIndex(index)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      index === currentImageIndex
-                        ? "bg-white w-8"
-                        : "bg-white/40"
-                    }`}
-                  />
-                ))}
-              </div>
-              <div className="flex space-x-2">
-                <button
-                  onClick={prevImage}
-                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={nextImage}
-                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
+          {/* Navigation Controls */}
+          <button
+            onClick={prevImage}
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/20 transition-all duration-300 hover:scale-110"
+          >
+            <ChevronLeft className="h-6 w-6 text-white" />
+          </button>
+          <button
+            onClick={nextImage}
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/20 transition-all duration-300 hover:scale-110"
+          >
+            <ChevronRight className="h-6 w-6 text-white" />
+          </button>
+
+          {/* Slide Indicators */}
+          <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 flex gap-2">
+            {heroImages.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentImageIndex(index)}
+                className={`w-3 h-3 rounded-full transition-all duration-300 hover:scale-125 ${
+                  index === currentImageIndex ? "bg-white" : "bg-white/30"
+                }`}
+              />
+            ))}
           </div>
         </div>
       </div>
@@ -286,6 +271,13 @@ export default function ForgotPasswordPage() {
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  {error && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2 text-red-400 text-sm">
+                      <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                      <span>{error}</span>
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <label
                       htmlFor="email"
@@ -316,7 +308,7 @@ export default function ForgotPasswordPage() {
                       <span className="text-sm">Sending...</span>
                     ) : (
                       <span className="flex items-center gap-2 text-sm justify-center">
-                        Send Reset
+                        Send Reset Link
                         <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                       </span>
                     )}
@@ -342,47 +334,14 @@ export default function ForgotPasswordPage() {
 
       {/* Right Side - Image Slideshow (Hidden on mobile) */}
       <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
-        {/* CSS animations */}
-        <style jsx>{`
-          @keyframes fadeSlide {
-            0% {
-              opacity: 0;
-              transform: scale(1.1);
-            }
-            100% {
-              opacity: 1;
-              transform: scale(1);
-            }
-          }
-
-          @keyframes slideUp {
-            0% {
-              opacity: 0;
-              transform: translateY(30px);
-            }
-            100% {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-
-          .image-container {
-            animation: fadeSlide 1s ease-out;
-          }
-
-          .text-slide-up {
-            animation: slideUp 0.8s ease-out 0.2s both;
-          }
-        `}</style>
-
         <AnimatePresence mode="wait">
           <motion.div
             key={currentImageIndex}
-            initial={{ opacity: 0, scale: 1.05 }}
+            initial={{ opacity: 0, scale: 1.1 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.8, ease: "easeInOut" }}
-            className="absolute inset-0 image-container"
+            className="absolute inset-0"
           >
             <Image
               src={heroImages[currentImageIndex].url}
@@ -391,74 +350,55 @@ export default function ForgotPasswordPage() {
               className="object-cover"
               priority
             />
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-900/70 via-purple-900/40 to-pink-900/60" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent" />
           </motion.div>
         </AnimatePresence>
 
-        {/* Overlay Content */}
-        <div className="relative z-10 flex flex-col justify-between h-full p-12 text-white">
-          {/* Top - Logo */}
-          <div className="text-slide-up">
-            <Link href="/" className="inline-flex items-center gap-3 group">
-              <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Ticket className="h-7 w-7 text-white" />
-              </div>
-              <span className="text-3xl font-bold tracking-tight">
-                ShowPass
-              </span>
-            </Link>
-          </div>
+        {/* Image Content Overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-8 text-white z-10">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`content-${currentImageIndex}`}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -30 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              <h3 className="text-3xl font-bold mb-2">
+                {heroImages[currentImageIndex].title}
+              </h3>
+              <p className="text-gray-300 text-lg">
+                {heroImages[currentImageIndex].description}
+              </p>
+            </motion.div>
+          </AnimatePresence>
+        </div>
 
-          {/* Center - Dynamic Content */}
-          <motion.div
-            key={`content-${currentImageIndex}`}
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -30 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="space-y-6"
-          >
-            <h1 className="text-5xl font-bold leading-tight bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
-              {heroImages[currentImageIndex].title}
-            </h1>
-            <p className="text-xl text-gray-200 leading-relaxed max-w-md">
-              {heroImages[currentImageIndex].description}
-            </p>
-          </motion.div>
+        {/* Navigation Controls */}
+        <button
+          onClick={prevImage}
+          className="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/20 transition-all duration-300 hover:scale-110"
+        >
+          <ChevronLeft className="h-6 w-6 text-white" />
+        </button>
+        <button
+          onClick={nextImage}
+          className="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/20 transition-all duration-300 hover:scale-110"
+        >
+          <ChevronRight className="h-6 w-6 text-white" />
+        </button>
 
-          {/* Bottom - Navigation */}
-          <div className="flex items-center justify-between text-slide-up">
-            {/* Dots */}
-            <div className="flex space-x-3">
-              {heroImages.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentImageIndex(index)}
-                  className={`transition-all duration-300 rounded-full ${
-                    index === currentImageIndex
-                      ? "bg-white w-10 h-3"
-                      : "bg-white/40 w-3 h-3 hover:bg-white/60"
-                  }`}
-                />
-              ))}
-            </div>
-
-            {/* Navigation Arrows */}
-            <div className="flex space-x-3">
-              <button
-                onClick={prevImage}
-                className="p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all duration-300 group"
-              >
-                <ChevronLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
-              </button>
-              <button
-                onClick={nextImage}
-                className="p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all duration-300 group"
-              >
-                <ChevronRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
-              </button>
-            </div>
-          </div>
+        {/* Slide Indicators */}
+        <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 flex gap-2">
+          {heroImages.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentImageIndex(index)}
+              className={`w-3 h-3 rounded-full transition-all duration-300 hover:scale-125 ${
+                index === currentImageIndex ? "bg-white" : "bg-white/30"
+              }`}
+            />
+          ))}
         </div>
       </div>
     </div>

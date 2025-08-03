@@ -125,11 +125,9 @@ interface AuthState {
   ) => Promise<{ success: boolean; message: string }>;
 
   // Email verification
-  verifyEmail: (
-    token: string
-  ) => Promise<{ success: boolean; message: string }>;
+  verifyEmail: (code: string) => Promise<{ success: boolean; message: string }>;
   resendVerification: (
-    email: string
+    email?: string
   ) => Promise<{ success: boolean; message: string }>;
 }
 
@@ -258,20 +256,18 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      verifyEmail: async (token: string) => {
+      verifyEmail: async (code: string) => {
         set({ isLoading: true, error: null });
 
         try {
-          console.log("Verifying email with token:", token);
-          console.log(
-            "API endpoint:",
-            `${API_CONFIG.ENDPOINTS.AUTH.VERIFY_EMAIL}?token=${token}`
-          );
+          console.log("Verifying email with code:", code);
+          console.log("API endpoint:", API_CONFIG.ENDPOINTS.AUTH.VERIFY_EMAIL);
 
           const data = await apiRequest(
-            `${API_CONFIG.ENDPOINTS.AUTH.VERIFY_EMAIL}?token=${token}`,
+            API_CONFIG.ENDPOINTS.AUTH.VERIFY_EMAIL,
             {
-              method: "GET",
+              method: "POST",
+              body: JSON.stringify({ code }),
             }
           );
 
@@ -301,20 +297,41 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      resendVerification: async (email: string) => {
+      resendVerification: async (email?: string) => {
         set({ isLoading: true, error: null });
 
         try {
-          const data = await apiRequest(
-            API_CONFIG.ENDPOINTS.AUTH.RESEND_VERIFICATION,
-            {
-              method: "POST",
-              body: JSON.stringify({ email }),
+          // If email is provided, use public endpoint (for unverified users)
+          // If no email, use authenticated endpoint (for logged in users)
+          if (email) {
+            const data = await apiRequest(
+              API_CONFIG.ENDPOINTS.AUTH.RESEND_VERIFICATION_EMAIL,
+              {
+                method: "POST",
+                body: JSON.stringify({ email }),
+              }
+            );
+            set({ isLoading: false, error: null });
+            return data;
+          } else {
+            // Use authenticated endpoint for logged-in users
+            const currentToken = get().token;
+            if (!currentToken) {
+              throw new Error("No authentication token found");
             }
-          );
 
-          set({ isLoading: false, error: null });
-          return data;
+            const data = await apiRequest(
+              API_CONFIG.ENDPOINTS.AUTH.RESEND_VERIFICATION,
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${currentToken}`,
+                },
+              }
+            );
+            set({ isLoading: false, error: null });
+            return data;
+          }
         } catch (error) {
           const errorMessage =
             error instanceof Error

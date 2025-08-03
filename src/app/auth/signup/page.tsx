@@ -17,6 +17,7 @@ import {
   UserCheck,
   Building,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 
 const heroImages = [
@@ -56,8 +57,6 @@ interface FormData {
   password: string;
   confirmPassword: string;
   accountType: "user" | "organizer" | "";
-  organizationName: string;
-  organizationType: string;
 }
 
 export default function SignUpPage() {
@@ -71,8 +70,6 @@ export default function SignUpPage() {
     password: "",
     confirmPassword: "",
     accountType: "",
-    organizationName: "",
-    organizationType: "",
   });
 
   const { register, isLoading, error, setError } = useAuthStore();
@@ -139,7 +136,7 @@ export default function SignUpPage() {
       };
 
       await register(userData);
-      router.push("/auth/verify-email");
+      router.push(`/auth/verify?email=${encodeURIComponent(formData.email)}`);
     } catch (error) {
       console.error("Registration failed:", error);
       // Error is already set in the store
@@ -161,13 +158,14 @@ export default function SignUpPage() {
       case 1:
         return formData.accountType !== "";
       case 2:
+        // Phone is only required for organizers
+        const phoneRequired =
+          formData.accountType === "organizer" ? formData.phone : true;
         return (
           formData.firstName &&
           formData.lastName &&
           formData.email &&
-          formData.phone &&
-          (formData.accountType === "user" ||
-            (formData.organizationName && formData.organizationType))
+          phoneRequired
         );
       case 3:
         return (
@@ -184,27 +182,44 @@ export default function SignUpPage() {
     <div className="h-screen bg-slate-900 flex overflow-hidden">
       {/* Left Side - Image Slideshow (Hidden on mobile) */}
       <div className="hidden lg:block lg:w-1/2 relative">
-        <div className="absolute inset-0 fade-in-image">
-          <Image
-            src={heroImages[currentImageIndex].url}
-            alt={heroImages[currentImageIndex].title}
-            fill
-            className="object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent" />
-        </div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentImageIndex}
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+            className="absolute inset-0"
+          >
+            <Image
+              src={heroImages[currentImageIndex].url}
+              alt={heroImages[currentImageIndex].title}
+              fill
+              className="object-cover"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent" />
+          </motion.div>
+        </AnimatePresence>
 
         {/* Image Content Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-          <div key={`content-${currentImageIndex}`} className="fade-in-up">
-            <h3 className="text-3xl font-bold mb-2">
-              {heroImages[currentImageIndex].title}
-            </h3>
-            <p className="text-gray-300 text-lg">
-              {heroImages[currentImageIndex].description}
-            </p>
-          </div>
+        <div className="absolute bottom-0 left-0 right-0 p-8 text-white z-10">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`content-${currentImageIndex}`}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -30 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              <h3 className="text-3xl font-bold mb-2">
+                {heroImages[currentImageIndex].title}
+              </h3>
+              <p className="text-gray-300 text-lg">
+                {heroImages[currentImageIndex].description}
+              </p>
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         {/* Navigation Controls */}
@@ -418,7 +433,10 @@ export default function SignUpPage() {
 
                     <div>
                       <label className="text-xs font-medium text-gray-300">
-                        Phone Number
+                        Phone Number{" "}
+                        {formData.accountType === "organizer"
+                          ? "*"
+                          : "(Optional)"}
                       </label>
                       <div className="relative">
                         <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -529,56 +547,56 @@ export default function SignUpPage() {
                   </div>
                 </div>
               )}
-            </div>
 
-            {/* Navigation Buttons */}
-            <div className="flex gap-3 mt-6">
-              {currentStep > 1 && (
-                <button
-                  type="button"
-                  onClick={prevStep}
-                  className="flex-1 h-10 text-black border border-slate-600 hover:bg-slate-700 hover:text-white rounded-lg transition-all duration-300 flex items-center justify-center"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-1" />
-                  <span className="text-sm">Back</span>
-                </button>
-              )}
+              {/* Navigation Buttons */}
+              <div className="flex gap-3 mt-6 px-0">
+                {currentStep > 1 && (
+                  <button
+                    type="button"
+                    onClick={prevStep}
+                    className="flex-1 h-10 text-white border border-slate-600 hover:bg-slate-700 rounded-lg transition-all duration-300 flex items-center justify-center"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-1" />
+                    <span className="text-sm">Back</span>
+                  </button>
+                )}
 
-              {currentStep < totalSteps ? (
-                <button
-                  type="button"
-                  onClick={nextStep}
-                  disabled={!isStepValid()}
-                  className="flex-1 h-10 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                >
-                  <span className="text-sm">Continue</span>
-                  <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  disabled={!isStepValid() || isLoading}
-                  className="flex-1 h-10 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                >
-                  <span className="text-sm">
-                    {isLoading ? "Creating Account..." : "Create Account"}
-                  </span>
-                  {!isLoading && <Check className="h-4 w-4 ml-1" />}
-                </button>
-              )}
-            </div>
+                {currentStep < totalSteps ? (
+                  <button
+                    type="button"
+                    onClick={nextStep}
+                    disabled={!isStepValid()}
+                    className="flex-1 h-10 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  >
+                    <span className="text-sm">Continue</span>
+                    <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={!isStepValid() || isLoading}
+                    className="flex-1 h-10 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  >
+                    <span className="text-sm">
+                      {isLoading ? "Creating Account..." : "Create Account"}
+                    </span>
+                    {!isLoading && <Check className="h-4 w-4 ml-1" />}
+                  </button>
+                )}
+              </div>
 
-            <div className="mt-6 text-center">
-              <p className="text-xs text-gray-400">
-                Already have an account?{" "}
-                <Link
-                  href="/auth/signin"
-                  className="text-pink-400 hover:text-pink-300 font-semibold"
-                >
-                  Sign in
-                </Link>
-              </p>
+              <div className="mt-6 text-center">
+                <p className="text-xs text-gray-400">
+                  Already have an account?{" "}
+                  <Link
+                    href="/auth/signin"
+                    className="text-pink-400 hover:text-pink-300 font-semibold"
+                  >
+                    Sign in
+                  </Link>
+                </p>
+              </div>
             </div>
           </div>
         </div>

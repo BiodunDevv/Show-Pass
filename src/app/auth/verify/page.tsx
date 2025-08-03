@@ -1,74 +1,109 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   CheckCircle,
   XCircle,
+  Ticket,
   ArrowRight,
   Loader2,
   AlertTriangle,
+  Send,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 
-type VerificationStatus = "loading" | "success" | "error" | "expired";
+type VerificationStatus = "initial" | "loading" | "success" | "error";
 
 export default function VerifyPage() {
-  const [status, setStatus] = useState<VerificationStatus>("loading");
+  const [status, setStatus] = useState<VerificationStatus>("initial");
   const [countdown, setCountdown] = useState(5);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [email, setEmail] = useState("");
+  const [isResending, setIsResending] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  const { verifyEmail, resendVerification, error } = useAuthStore();
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const images = [
+    "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=600&fit=crop",
+  ];
+
   useEffect(() => {
-    const token = searchParams.get("token");
+    const emailParam = searchParams.get("email");
+    if (emailParam) {
+      setEmail(emailParam);
+    }
+  }, [searchParams]);
 
-    const performVerification = async () => {
-      if (!token) {
-        setStatus("error");
-        return;
-      }
+  useEffect(() => {
+    // Image rotation
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % images.length);
+    }, 3000);
 
-      try {
-        console.log("Starting verification with token:", token);
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        console.log("Verification successful");
-        setStatus("success");
+    return () => clearInterval(interval);
+  }, []);
 
-        // Start countdown for auto-redirect
-        const timer = setInterval(() => {
-          setCountdown((prev) => {
-            if (prev <= 1) {
-              router.push("/auth/signin");
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
+  const handleVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-        // Cleanup timer after 5 seconds
-        setTimeout(() => clearInterval(timer), 5000);
-      } catch (error: any) {
-        console.error("Email verification failed:", error);
+    if (!verificationCode.trim() || verificationCode.length !== 6) {
+      return;
+    }
 
-        // Check if it's an expired token
-        if (
-          error.message?.includes("expired") ||
-          error.message?.includes("invalid") ||
-          error.message?.includes("Token")
-        ) {
-          setStatus("expired");
-        } else {
-          setStatus("error");
-        }
-      }
-    };
+    setStatus("loading");
 
-    performVerification();
-  }, [searchParams, router]);
+    try {
+      console.log("Starting verification with code:", verificationCode);
+      const result = await verifyEmail(verificationCode);
+      console.log("Verification successful:", result);
+      setStatus("success");
+
+      // Start countdown for auto-redirect
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            router.push("/");
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      // Cleanup timer after 5 seconds
+      setTimeout(() => clearInterval(timer), 5000);
+    } catch (error: any) {
+      console.error("Email verification failed:", error);
+      setStatus("error");
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (!email) {
+      alert("Please provide your email address");
+      return;
+    }
+
+    setIsResending(true);
+    setResendSuccess(false);
+
+    try {
+      await resendVerification(email);
+      setResendSuccess(true);
+      setTimeout(() => setResendSuccess(false), 3000);
+    } catch (error) {
+      console.error("Failed to resend verification code:", error);
+    } finally {
+      setIsResending(false);
+    }
+  };
 
   const getStatusConfig = () => {
     switch (status) {
@@ -88,23 +123,21 @@ export default function VerifyPage() {
           bgColor: "bg-green-500/20",
           borderColor: "border-green-500/20",
         };
-      case "expired":
-        return {
-          icon: <AlertTriangle className="h-12 w-12 text-yellow-500" />,
-          title: "Verification Link Expired",
-          message:
-            "This verification link has expired. Please request a new one.",
-          bgColor: "bg-yellow-500/20",
-          borderColor: "border-yellow-500/20",
-        };
-      default:
+      case "error":
         return {
           icon: <XCircle className="h-12 w-12 text-red-500" />,
           title: "Verification Failed",
-          message:
-            "We couldn't verify your email. The link may be invalid or expired.",
+          message: error || "Invalid verification code. Please try again.",
           bgColor: "bg-red-500/20",
           borderColor: "border-red-500/20",
+        };
+      default:
+        return {
+          icon: <Ticket className="h-12 w-12 text-purple-500" />,
+          title: "Verify Your Email",
+          message: "Enter the 6-digit code sent to your email address",
+          bgColor: "bg-purple-500/20",
+          borderColor: "border-purple-500/20",
         };
     }
   };
@@ -112,175 +145,246 @@ export default function VerifyPage() {
   const config = getStatusConfig();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex">
-      {/* Left Panel - Hero Image */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        <Image
-          src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=600&fit=crop"
-          alt="Welcome to ShowPass"
-          fill
-          className="object-cover"
-          priority
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/80 via-pink-900/60 to-slate-900/80" />
-
-        {/* Hero Content */}
-        <div className="relative z-10 flex flex-col justify-between p-12 text-white">
-          <div>
-            <Link href="/" className="inline-flex items-center gap-3 group">
-              <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-white"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                </svg>
-              </div>
-              <span className="text-2xl font-bold">ShowPass</span>
+    <div className="h-screen bg-slate-900 flex overflow-hidden">
+      {/* Left Side - Content */}
+      <div className="w-full lg:w-1/2 flex flex-col justify-center p-8 h-screen overflow-y-auto">
+        <div className="w-full max-w-md mx-auto">
+          {/* Back to ShowPass Button */}
+          <div className="mb-6">
+            <Link
+              href="/"
+              className="inline-flex items-center px-4 py-2 text-gray-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all duration-300 group backdrop-blur-sm border border-slate-700/30"
+            >
+              <ArrowRight className="h-4 w-4 mr-2 rotate-180 group-hover:-translate-x-1 transition-transform" />
+              <span className="text-sm font-medium">Back to ShowPass</span>
             </Link>
           </div>
 
-          <div className="space-y-6">
-            <h1 className="text-4xl font-bold leading-tight">
-              {status === "success"
-                ? "Welcome to ShowPass!"
-                : "Email Verification"}
-            </h1>
-            <p className="text-xl text-gray-200">
-              {status === "success"
-                ? "You're all set! Start creating amazing event experiences."
-                : "Join thousands of event creators and attendees across Nigeria."}
-            </p>
-          </div>
+          <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 shadow-2xl rounded-lg">
+            <div className="p-6">
+              {/* Logo */}
+              <div className="flex justify-center mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <Ticket className="h-6 w-6 text-white" />
+                  </div>
+                  <span className="text-2xl font-bold text-white">
+                    ShowPass
+                  </span>
+                </div>
+              </div>
 
-          <div className="text-sm text-gray-400">
-            <p>© 2025 ShowPass. Secure email verification.</p>
+              <div className="text-center">
+                <h1 className="text-2xl font-bold text-white mb-4">
+                  {config.title}
+                </h1>
+                <p className="text-gray-400 mb-6">{config.message}</p>
+
+                {/* Verification Form - Only show when in initial state */}
+                {status === "initial" && (
+                  <form onSubmit={handleVerification} className="space-y-4">
+                    {/* Email Input (if not provided via URL) */}
+                    {!email && (
+                      <div className="text-left">
+                        <label className="block text-sm font-medium text-gray-400 mb-2">
+                          Email Address
+                        </label>
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                          placeholder="Enter your email address"
+                          required
+                        />
+                      </div>
+                    )}
+
+                    {/* Verification Code Input */}
+                    <div className="text-left">
+                      <label className="block text-sm font-medium text-gray-400 mb-2">
+                        Verification Code
+                      </label>
+                      <input
+                        type="text"
+                        value={verificationCode}
+                        onChange={(e) => {
+                          const value = e.target.value
+                            .replace(/\D/g, "")
+                            .slice(0, 6);
+                          setVerificationCode(value);
+                        }}
+                        className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent text-center text-lg tracking-widest font-mono"
+                        placeholder="000000"
+                        maxLength={6}
+                        required
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Enter the 6-digit code sent to your email
+                      </p>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={verificationCode.length !== 6}
+                      className="w-full h-12 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    >
+                      Verify Email
+                    </button>
+
+                    {/* Resend Code Button */}
+                    <div className="text-center pt-4">
+                      <p className="text-sm text-gray-400 mb-2">
+                        Didn't receive the code?
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleResendCode}
+                        disabled={isResending || !email}
+                        className="inline-flex items-center gap-2 text-pink-400 hover:text-pink-300 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isResending ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="h-4 w-4" />
+                            Resend Code
+                          </>
+                        )}
+                      </button>
+                      {resendSuccess && (
+                        <p className="text-green-400 text-xs mt-1">
+                          New code sent successfully!
+                        </p>
+                      )}
+                    </div>
+                  </form>
+                )}
+
+                {/* Success State */}
+                {status === "success" && (
+                  <div className="space-y-6">
+                    <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+                      <p className="text-green-400 font-medium mb-2">
+                        What's Next?
+                      </p>
+                      <ul className="text-sm text-gray-400 space-y-1 text-left">
+                        <li>• Complete your profile setup</li>
+                        <li>• Start discovering amazing events</li>
+                        <li>• Create your first event (organizers)</li>
+                      </ul>
+                    </div>
+
+                    <div className="text-sm text-gray-400">
+                      Redirecting to home in{" "}
+                      <span className="text-pink-400 font-semibold">
+                        {countdown}
+                      </span>{" "}
+                      seconds...
+                    </div>
+
+                    <button
+                      onClick={() => router.push("/")}
+                      className="w-full h-10 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group"
+                    >
+                      <span className="flex items-center gap-2 text-sm justify-center">
+                        Continue to Home
+                        <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Error State */}
+                {status === "error" && (
+                  <div className="space-y-4">
+                    <button
+                      onClick={() => {
+                        setStatus("initial");
+                        setVerificationCode("");
+                      }}
+                      className="w-full h-10 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-sm"
+                    >
+                      Try Again
+                    </button>
+                    <Link
+                      href="/auth/signin"
+                      className="w-full h-10 text-white border border-slate-600 hover:bg-slate-700 rounded-lg transition-all duration-300 text-sm flex items-center justify-center"
+                    >
+                      Back to Sign In
+                    </Link>
+                  </div>
+                )}
+
+                {/* Loading State */}
+                {status === "loading" && (
+                  <div className="space-y-2">
+                    <div className="w-full bg-slate-700 rounded-full h-2">
+                      <motion.div
+                        className="bg-gradient-to-r from-pink-500 to-purple-600 h-2 rounded-full"
+                        initial={{ width: "0%" }}
+                        animate={{ width: "100%" }}
+                        transition={{ duration: 2, ease: "easeInOut" }}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      This may take a few moments...
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Right Panel - Content */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
-          {/* Mobile Logo */}
-          <div className="lg:hidden text-center mb-8">
-            <Link href="/" className="inline-flex items-center gap-3 group">
-              <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl flex items-center justify-center">
-                <svg
-                  className="w-7 h-7 text-white"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                </svg>
-              </div>
-              <span className="text-3xl font-bold text-white">ShowPass</span>
-            </Link>
-          </div>
-
+      {/* Right Side - Image Slideshow (Hidden on mobile) */}
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
+        <AnimatePresence mode="wait">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            key={currentImageIndex}
+            initial={{ opacity: 0, scale: 1.1 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-            className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 shadow-2xl text-center"
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+            className="absolute inset-0"
           >
-            {/* Status Icon */}
-            <div
-              className={`w-20 h-20 ${config.bgColor} rounded-full flex items-center justify-center mx-auto mb-6 ${config.borderColor} border`}
-            >
-              {config.icon}
-            </div>
-
-            <h1 className="text-3xl font-bold text-white mb-4">
-              {config.title}
-            </h1>
-            <p className="text-gray-300 mb-8">{config.message}</p>
-
-            {/* Status-specific content */}
-            {status === "success" && (
-              <div className="space-y-6">
-                <div className="p-4 bg-green-500/20 border border-green-500/30 rounded-xl">
-                  <p className="text-green-400 font-medium mb-2">
-                    What's Next?
-                  </p>
-                  <ul className="text-sm text-gray-300 space-y-1 text-left">
-                    <li>• Sign in to your account</li>
-                    <li>• Complete your profile setup</li>
-                    <li>• Start discovering amazing events</li>
-                    <li>• Create your first event (organizers)</li>
-                  </ul>
-                </div>
-
-                <div className="text-sm text-gray-400">
-                  Redirecting to sign in in{" "}
-                  <span className="text-pink-400 font-semibold">
-                    {countdown}
-                  </span>{" "}
-                  seconds...
-                </div>
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div className="space-y-4 mt-8">
-              {status === "success" && (
-                <button
-                  onClick={() => router.push("/auth/signin")}
-                  className="w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center gap-2"
-                >
-                  Continue to Sign In
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-              )}
-
-              {(status === "error" || status === "expired") && (
-                <>
-                  <Link
-                    href="/auth/verify-email"
-                    className="block w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-[1.02] text-center"
-                  >
-                    Request New Verification
-                  </Link>
-                  <Link
-                    href="/auth/signin"
-                    className="block w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 text-center"
-                  >
-                    Back to Sign In
-                  </Link>
-                </>
-              )}
-
-              {status === "loading" && (
-                <div className="space-y-2">
-                  <div className="w-full bg-slate-700 rounded-full h-2">
-                    <motion.div
-                      className="bg-gradient-to-r from-pink-500 to-purple-600 h-2 rounded-full"
-                      initial={{ width: "0%" }}
-                      animate={{ width: "100%" }}
-                      transition={{ duration: 2, ease: "easeInOut" }}
-                    />
-                  </div>
-                  <p className="text-xs text-gray-400">
-                    This may take a few moments...
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Help Text */}
-            <div className="mt-8 pt-6 border-t border-white/10">
-              <p className="text-sm text-gray-400">
-                Need help?{" "}
-                <Link
-                  href="/contact"
-                  className="text-pink-400 hover:text-pink-300 transition-colors"
-                >
-                  Contact Support
-                </Link>
-              </p>
-            </div>
+            <Image
+              src={images[currentImageIndex]}
+              alt="ShowPass Verification"
+              fill
+              className="object-cover"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent" />
           </motion.div>
+        </AnimatePresence>
+
+        {/* Image Content Overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-8 text-white z-10">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={status}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -30 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              <h3 className="text-3xl font-bold mb-2">
+                {status === "success"
+                  ? "Welcome to ShowPass!"
+                  : "Almost There!"}
+              </h3>
+              <p className="text-gray-300 text-lg">
+                {status === "success"
+                  ? "You're all set! Start creating amazing event experiences."
+                  : "Just one more step to complete your email verification."}
+              </p>
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
     </div>

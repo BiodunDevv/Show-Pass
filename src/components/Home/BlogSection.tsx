@@ -7,29 +7,19 @@ import Link from "next/link";
 import { useArticleStore } from "@/store/useArticleStore";
 
 export function BlogSection() {
-  console.log("BlogSection: Component is being called");
 
   const { articles, fetchArticles, isLoading, error } = useArticleStore();
 
-  console.log("BlogSection: Initial state", {
-    articles: articles.length,
-    isLoading,
-    error,
-  });
-
   // Fetch articles when component mounts
   useEffect(() => {
-    console.log("BlogSection: useEffect triggered");
     const loadArticles = async () => {
       try {
-        console.log("BlogSection: About to call fetchArticles");
         await fetchArticles({
           page: 1,
           limit: 3,
           sortBy: "publishedAt",
           sortOrder: "desc",
         });
-        console.log("BlogSection: Articles fetched successfully");
       } catch (error) {
         console.error("Failed to load articles:", error);
       }
@@ -37,18 +27,6 @@ export function BlogSection() {
 
     loadArticles();
   }, [fetchArticles]);
-
-  // Debug state changes
-  useEffect(() => {
-    console.log("BlogSection state updated:", {
-      articlesCount: articles.length,
-      isLoading,
-      error,
-      firstArticle: articles[0]?.title || "none",
-    });
-  }, [articles, isLoading, error]);
-
-  console.log("BlogSection: About to render with articles:", articles.length);
 
   return (
     <section className="py-24 bg-gradient-to-b from-slate-900 to-slate-800">
