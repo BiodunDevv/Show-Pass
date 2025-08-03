@@ -15,6 +15,7 @@ export const API_CONFIG = {
     },
     USER: {
       PROFILE: "/api/user-details/profile",
+      ORGANIZER_PROFILE: "/api/user-details/organizer",
     },
     EVENTS: {
       GET_ALL: "/api/events",
@@ -39,6 +40,8 @@ export const API_CONFIG = {
       DELETE: "/api/articles",
       LIKE: "/api/articles",
       ADD_COMMENT: "/api/articles",
+      GET_COMMENTS: "/api/articles",
+      ADD_REPLY: "/api/articles",
     },
     BOOKINGS: {
       CHECK_IN: "/api/bookings",

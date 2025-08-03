@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -37,6 +38,7 @@ const categories = [
 ];
 
 export default function EventsPage() {
+  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isClient, setIsClient] = useState(false);
@@ -46,10 +48,39 @@ export default function EventsPage() {
 
   const { events, fetchEvents, isLoading, error } = useEventStore();
 
-  // Ensure we're on the client side
+  // Ensure we're on the client side and handle URL parameters
   useEffect(() => {
     setIsClient(true);
-  }, []);
+
+    // Handle search and category parameters from URL
+    const searchParam = searchParams.get("search");
+    const categoryParam = searchParams.get("category");
+
+    if (searchParam) {
+      setSearchQuery(decodeURIComponent(searchParam));
+    }
+
+    if (categoryParam) {
+      // Map category names to their IDs
+      const categoryMap: { [key: string]: string } = {
+        Technology: "Technology",
+        Music: "Music",
+        Business: "Business",
+        "Food & Drink": "Food",
+        Food: "Food",
+        Fashion: "Fashion",
+        Entertainment: "Entertainment",
+        Sports: "Sports",
+        Education: "Education",
+        "Health & Wellness": "Health",
+        Health: "Health",
+      };
+
+      const categoryId =
+        categoryMap[decodeURIComponent(categoryParam)] || categoryParam;
+      setSelectedCategory(categoryId);
+    }
+  }, [searchParams]);
 
   // Fetch events only on client side
   useEffect(() => {
@@ -227,12 +258,52 @@ export default function EventsPage() {
                 Discover Amazing Events
               </div>
               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent px-2">
-                Find Your Perfect Event
+                {searchParams.get("search")
+                  ? "Search Results"
+                  : searchParams.get("category")
+                  ? `${decodeURIComponent(
+                      searchParams.get("category") || ""
+                    )} Events`
+                  : "Find Your Perfect Event"}
               </h1>
+
+              {/* Search/Category Results Indicator */}
+              {(searchParams.get("search") || searchParams.get("category")) && (
+                <div className="mb-4 sm:mb-6">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500/10 to-purple-600/10 border border-pink-500/30 rounded-full text-pink-300 text-sm sm:text-base">
+                    {searchParams.get("search") && (
+                      <>
+                        <Search className="h-4 w-4" />
+                        <span>
+                          Searching for: "
+                          {decodeURIComponent(searchParams.get("search") || "")}
+                          "
+                        </span>
+                      </>
+                    )}
+                    {searchParams.get("category") && (
+                      <>
+                        <Star className="h-4 w-4" />
+                        <span>
+                          Category:{" "}
+                          {decodeURIComponent(
+                            searchParams.get("category") || ""
+                          )}
+                        </span>
+                      </>
+                    )}
+                    <span className="text-gray-400">•</span>
+                    <span className="text-gray-300">
+                      {filteredEvents.length} events found
+                    </span>
+                  </div>
+                </div>
+              )}
+
               <p className="text-sm sm:text-base lg:text-lg text-gray-400 max-w-xs sm:max-w-lg md:max-w-2xl mx-auto leading-relaxed px-4">
-                From concerts to conferences, discover amazing events happening
-                near you. Connect with your community and create lasting
-                memories.
+                {searchParams.get("search") || searchParams.get("category")
+                  ? "Browse through the results and find the perfect event for you."
+                  : "From concerts to conferences, discover amazing events happening near you. Connect with your community and create lasting memories."}
               </p>
             </motion.div>
 

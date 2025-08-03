@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Clock, TrendingUp, MapPin, Calendar } from "lucide-react";
+import { Search, Clock, TrendingUp, MapPin, Calendar, X } from "lucide-react";
 import { useEventStore } from "@/store/useEventStore";
 import Image from "next/image";
 
@@ -18,18 +18,36 @@ export function HeroSearch() {
   const [isOpen, setIsOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [recentSearches, setRecentSearches] = useState<SearchSuggestion[]>([]);
-  const [trendingSearches, setTrendingSearches] = useState<SearchSuggestion[]>(
-    []
-  );
   const [isLoading, setIsLoading] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { searchEvents, categories, fetchEventCategories } = useEventStore();
 
-  // Load data from localStorage and fetch trending
+  // All available categories
+  const allCategories = [
+    { name: "Music", icon: "🎵" },
+    { name: "Technology", icon: "💻" },
+    { name: "Food & Drink", icon: "🍽️" },
+    { name: "Sports", icon: "⚽" },
+    { name: "Business", icon: "💼" },
+    { name: "Entertainment", icon: "🎭" },
+    { name: "Education", icon: "📚" },
+    { name: "Health", icon: "🏥" },
+    { name: "Art & Culture", icon: "🎨" },
+    { name: "Travel", icon: "✈️" },
+    { name: "Fashion", icon: "👗" },
+    { name: "Gaming", icon: "🎮" },
+  ];
+
+  // Randomly select 4 categories each time
+  const randomCategories = useMemo(() => {
+    const shuffled = [...allCategories].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 4);
+  }, []);
+
+  // Load data from localStorage
   useEffect(() => {
     loadRecentSearches();
-    loadTrendingSearches();
     fetchEventCategories();
   }, [fetchEventCategories]);
 
@@ -86,17 +104,6 @@ export function HeroSearch() {
     }
   };
 
-  const loadTrendingSearches = () => {
-    // Mock trending searches - in real app, this would come from API
-    const trending = [
-      { id: "trending-1", text: "Tech Conference", type: "trending" as const },
-      { id: "trending-2", text: "Music Festival", type: "trending" as const },
-      { id: "trending-3", text: "Food Events", type: "trending" as const },
-      { id: "trending-4", text: "Networking", type: "trending" as const },
-    ];
-    setTrendingSearches(trending);
-  };
-
   const saveSearchToHistory = (searchText: string) => {
     try {
       const newSearch: SearchSuggestion = {
@@ -124,8 +131,8 @@ export function HeroSearch() {
     saveSearchToHistory(searchText.trim());
 
     try {
-      await searchEvents(searchText.trim());
-      router.push(`/search?q=${encodeURIComponent(searchText.trim())}`);
+      // Redirect to events page with search query
+      router.push(`/events?search=${encodeURIComponent(searchText.trim())}`);
     } catch (error) {
       console.error("Search error:", error);
     } finally {
@@ -133,6 +140,11 @@ export function HeroSearch() {
       setIsOpen(false);
       setQuery("");
     }
+  };
+
+  const handleCategoryClick = (categoryName: string) => {
+    // Redirect to events page with category filter
+    router.push(`/events?category=${encodeURIComponent(categoryName)}`);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -196,111 +208,140 @@ export function HeroSearch() {
           {/* Search Bar */}
           <div
             ref={searchRef}
-            className="relative max-w-2xl mx-auto animate-fade-in-up-delay-2"
+            className="relative max-w-2xl mx-auto animate-fade-in-up-delay-2 px-4 sm:px-0"
           >
             <form onSubmit={handleSubmit} className="relative">
               <div className="relative">
+                <div className="absolute left-4 sm:left-6 top-1/2 transform -translate-y-1/2 text-gray-400 z-10">
+                  <Search className="h-5 w-5 sm:h-6 sm:w-6" />
+                </div>
                 <input
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onFocus={() => setIsOpen(true)}
                   placeholder="Search for events, categories, or locations..."
-                  className="w-full pl-4 pr-6 py-6 text-lg rounded-2xl border-2 border-gray-600 bg-transparent backdrop-blur-xs text-white placeholder:text-gray-300 focus:outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/20 transition-all duration-300"
+                  className="w-full pl-12 sm:pl-16 pr-12 sm:pr-16 py-4 text-base sm:text-lg rounded-xl sm:rounded-2xl border-2 border-gray-600 bg-transparent backdrop-blur-xs text-white placeholder:text-gray-300 focus:outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/20 transition-all duration-300 shadow-xl"
                 />
                 {isLoading && (
-                  <div className="absolute right-6 top-1/2 transform -translate-y-1/2">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-pink-500"></div>
+                  <div className="absolute right-4 sm:right-6 top-1/2 transform -translate-y-1/2">
+                    <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-b-2 border-pink-500"></div>
                   </div>
+                )}
+                {!isLoading && query && (
+                  <button
+                    type="button"
+                    onClick={() => setQuery("")}
+                    className="absolute right-16 sm:right-6 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                )}
+                {/* Mobile Enter Button */}
+                {!isLoading && query && (
+                  <button
+                    type="submit"
+                    className="absolute right-2 sm:hidden top-1/2 transform -translate-y-1/2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg px-3 py-1 text-xs font-medium transition-colors shadow-lg"
+                  >
+                    Go
+                  </button>
                 )}
               </div>
 
               {/* Search Suggestions Dropdown */}
               {isOpen && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800/95 backdrop-blur-xl border border-slate-700 rounded-2xl shadow-2xl z-50 max-h-96 overflow-y-auto">
+                <div className="absolute top-full left-0 right-0 mt-2 mx-2 sm:mx-0 bg-transparent backdrop-blur-sm border border-white/10 rounded-2xl shadow-2xl z-50 max-h-80 sm:max-h-96 overflow-hidden">
                   {/* Current Query Suggestions */}
                   {query.trim() && suggestions.length > 0 && (
-                    <div className="p-4 border-b border-slate-700">
-                      <h3 className="text-sm font-semibold text-gray-400 mb-3">
+                    <div className="p-4 sm:p-6 border-b border-white/10">
+                      <h3 className="text-sm font-semibold text-white/70 mb-3 sm:mb-4">
                         Suggestions
                       </h3>
-                      {suggestions.map((suggestion) => (
-                        <button
-                          key={suggestion.id}
-                          onClick={() => handleSuggestionClick(suggestion)}
-                          className="w-full flex items-center gap-3 p-3 text-left hover:bg-slate-700/50 rounded-lg transition-colors"
-                        >
-                          <div className="text-gray-400">
-                            {getSuggestionIcon(suggestion.type)}
-                          </div>
-                          <span className="text-white flex-1">
-                            {suggestion.text}
-                          </span>
-                          <span className="text-xs text-gray-500 capitalize">
-                            {suggestion.type}
-                          </span>
-                        </button>
-                      ))}
+                      <div className="space-y-1 sm:space-y-2">
+                        {suggestions.map((suggestion) => (
+                          <button
+                            key={suggestion.id}
+                            onClick={() => handleSuggestionClick(suggestion)}
+                            className="w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 text-left bg-white/5 hover:bg-white/10 rounded-xl transition-all duration-300 hover:scale-[1.02] border border-transparent hover:border-white/20"
+                          >
+                            <div className="text-white/50 flex-shrink-0">
+                              {getSuggestionIcon(suggestion.type)}
+                            </div>
+                            <span className="text-white flex-1 text-sm sm:text-base font-medium truncate">
+                              {suggestion.text}
+                            </span>
+                            <span className="text-xs text-white/40 capitalize hidden sm:inline bg-white/10 px-2 py-1 rounded-full">
+                              {suggestion.type}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
 
                   {/* Recent Searches */}
                   {!query.trim() && recentSearches.length > 0 && (
-                    <div className="p-4 border-b border-slate-700">
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-sm font-semibold text-gray-400">
+                    <div className="p-4 sm:p-6">
+                      <div className="flex items-center justify-between mb-3 sm:mb-4">
+                        <h3 className="text-sm font-semibold text-white/70">
                           Recent Searches
                         </h3>
                         <button
                           onClick={clearRecentSearches}
-                          className="text-xs text-pink-400 hover:text-pink-300 transition-colors"
+                          className="text-xs text-pink-400 hover:text-pink-300 transition-colors bg-white/10 hover:bg-white/20 px-3 py-1 rounded-full border border-pink-400/30"
                         >
-                          Clear
+                          Clear All
                         </button>
                       </div>
-                      {recentSearches.map((search) => (
-                        <button
-                          key={search.id}
-                          onClick={() => handleSuggestionClick(search)}
-                          className="w-full flex items-center gap-3 p-3 text-left hover:bg-slate-700/50 rounded-lg transition-colors"
-                        >
-                          <Clock className="h-4 w-4 text-gray-400" />
-                          <span className="text-white flex-1">
-                            {search.text}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Trending Searches */}
-                  {!query.trim() && trendingSearches.length > 0 && (
-                    <div className="p-4">
-                      <h3 className="text-sm font-semibold text-gray-400 mb-3">
-                        Trending
-                      </h3>
-                      {trendingSearches.map((search) => (
-                        <button
-                          key={search.id}
-                          onClick={() => handleSuggestionClick(search)}
-                          className="w-full flex items-center gap-3 p-3 text-left hover:bg-slate-700/50 rounded-lg transition-colors"
-                        >
-                          <TrendingUp className="h-4 w-4 text-pink-400" />
-                          <span className="text-white flex-1">
-                            {search.text}
-                          </span>
-                        </button>
-                      ))}
+                      <div className="space-y-1 sm:space-y-2">
+                        {recentSearches.map((search) => (
+                          <button
+                            key={search.id}
+                            onClick={() => handleSuggestionClick(search)}
+                            className="w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 text-left bg-white/5 hover:bg-white/10 rounded-xl transition-all duration-300 hover:scale-[1.02] border border-transparent hover:border-white/20 group"
+                          >
+                            <div className="bg-white/10 rounded-lg p-2 group-hover:bg-white/20 transition-colors">
+                              <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-white/60 group-hover:text-white/80" />
+                            </div>
+                            <span className="text-white flex-1 text-sm sm:text-base font-medium truncate group-hover:text-white">
+                              {search.text}
+                            </span>
+                            <div className="text-xs text-white/30 hidden sm:block">
+                              {search.timestamp &&
+                                new Date(search.timestamp).toLocaleDateString()}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
 
                   {/* No suggestions */}
                   {query.trim() && suggestions.length === 0 && (
-                    <div className="p-6 text-center text-gray-400">
-                      <Search className="h-8 w-8 mx-auto mb-3 opacity-50" />
-                      <p>No suggestions found</p>
-                      <p className="text-sm mt-1">
+                    <div className="p-6 sm:p-8 text-center text-white/60">
+                      <div className="bg-white/10 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                        <Search className="h-6 w-6 sm:h-8 sm:w-8 opacity-50" />
+                      </div>
+                      <p className="text-sm sm:text-base font-medium mb-2">
+                        No suggestions found
+                      </p>
+                      <p className="text-xs sm:text-sm text-white/40">
                         Press Enter to search anyway
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Empty state when no recent searches */}
+                  {!query.trim() && recentSearches.length === 0 && (
+                    <div className="p-6 sm:p-8 text-center text-white/60">
+                      <div className="bg-white/10 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                        <Clock className="h-6 w-6 sm:h-8 sm:w-8 opacity-50" />
+                      </div>
+                      <p className="text-sm sm:text-base font-medium mb-2">
+                        No recent searches
+                      </p>
+                      <p className="text-xs sm:text-sm text-white/40">
+                        Start typing to search for events
                       </p>
                     </div>
                   )}
@@ -308,19 +349,28 @@ export function HeroSearch() {
               )}
             </form>
 
-            {/* Quick Action Buttons */}
-            <div className="flex flex-wrap justify-center gap-3 mt-8">
-              {["Music", "Technology", "Food & Drink", "Sports"].map(
-                (category) => (
+            {/* Quick Action Categories */}
+            <div className="mt-8 sm:mt-12">
+              <p className="text-center text-gray-400 text-sm sm:text-base mb-4 sm:mb-6">
+                Or browse popular categories
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto">
+                {randomCategories.map((category) => (
                   <button
-                    key={category}
-                    onClick={() => handleSearch(category)}
-                    className="px-6 py-3 bg-transparent backdrop-blur-xs border border-white/20 rounded-full text-white hover:border-pink-500/50 transition-all duration-300 hover:scale-105"
+                    key={category.name}
+                    onClick={() => handleCategoryClick(category.name)}
+                    className="group relative px-4 py-3 sm:px-6 sm:py-4 bg-transparent backdrop-blur-xs border border-white/20 rounded-xl text-white hover:bg-white/15 hover:border-white/30 transition-all duration-300 hover:scale-105 hover:shadow-lg flex flex-col items-center justify-center gap-2 text-sm sm:text-base min-h-[60px] sm:min-h-[100px]"
                   >
-                    {category}
+                    <span className="hidden sm:block text-2xl sm:text-3xl filter grayscale opacity-70 group-hover:filter-none group-hover:opacity-100 transition-all duration-300">
+                      {category.icon}
+                    </span>
+                    <span className="text-center font-medium leading-tight">
+                      {category.name}
+                    </span>
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 rounded-xl transition-opacity duration-300"></div>
                   </button>
-                )
-              )}
+                ))}
+              </div>
             </div>
           </div>
         </div>
