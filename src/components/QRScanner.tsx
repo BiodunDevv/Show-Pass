@@ -156,14 +156,14 @@ export function QRScanner({ onScan, onClose, isOpen }: QRScannerProps) {
               </p>
               <button
                 onClick={startCamera}
-                className="px-4 py-2 bg-pink-500 hover:bg-pink-600 rounded-lg transition-colors"
+                className="px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg transition-colors"
               >
                 Enable Camera
               </button>
             </div>
           ) : hasPermission === null ? (
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
             </div>
           ) : (
             <>
@@ -179,13 +179,13 @@ export function QRScanner({ onScan, onClose, isOpen }: QRScannerProps) {
               {/* Scanning Overlay */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="relative">
-                  <div className="w-64 h-64 border-2 border-pink-500 rounded-lg opacity-75">
-                    <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-pink-500 rounded-tl-lg"></div>
-                    <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-pink-500 rounded-tr-lg"></div>
-                    <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-pink-500 rounded-bl-lg"></div>
-                    <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-pink-500 rounded-br-lg"></div>
+                  <div className="w-64 h-64 border-2 border-purple-500 rounded-lg opacity-75">
+                    <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-purple-500 rounded-tl-lg"></div>
+                    <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-purple-500 rounded-tr-lg"></div>
+                    <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-purple-500 rounded-bl-lg"></div>
+                    <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-purple-500 rounded-br-lg"></div>
                   </div>
-                  <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-pink-500 animate-pulse"></div>
+                  <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-purple-500 animate-pulse"></div>
                 </div>
               </div>
 
@@ -297,7 +297,7 @@ export function ManualQREntry({
               value={qrData}
               onChange={(e) => setQrData(e.target.value)}
               placeholder='{"bookingId":"...","eventId":"...","reference":"..."}'
-              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
+              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
               rows={3}
             />
           </div>
@@ -313,7 +313,7 @@ export function ManualQREntry({
                 type="text"
                 value={bookingId}
                 onChange={(e) => setBookingId(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 placeholder="Enter booking ID"
               />
             </div>
@@ -326,7 +326,7 @@ export function ManualQREntry({
                 type="text"
                 value={eventId}
                 onChange={(e) => setEventId(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 placeholder="Enter event ID"
               />
             </div>
@@ -339,7 +339,7 @@ export function ManualQREntry({
                 type="text"
                 value={reference}
                 onChange={(e) => setReference(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 placeholder="Enter reference"
               />
             </div>
@@ -358,7 +358,7 @@ export function ManualQREntry({
               disabled={
                 !qrData.trim() && (!bookingId || !eventId || !reference)
               }
-              className="flex-1 px-4 py-2 bg-pink-500 hover:bg-pink-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+              className="flex-1 px-4 py-2 bg-purple-500 hover:bg-purple-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
             >
               Verify
             </button>

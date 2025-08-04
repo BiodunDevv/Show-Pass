@@ -183,8 +183,24 @@ export default function EventDetailsPage() {
       router.push("/auth/signin");
       return;
     }
-    setShowBookingModal(true);
+    
+    if (!event) {
+      return;
+    }
+    
+    // Redirect to booking page with selected ticket
+    if (selectedTicket) {
+      router.push(`/booking/${event._id}?ticket=${selectedTicket}`);
+    } else {
+      router.push(`/booking/${event._id}`);
+    }
   };
+
+    if (!user) {
+      router.push("/auth/signin");
+      return;
+    }
+    setShowBookingModal(true);
 
   const handleCopyEventUrl = async () => {
     try {
@@ -333,7 +349,7 @@ export default function EventDetailsPage() {
             </p>
             <Link
               href="/events"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-300"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-300"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Events
@@ -388,7 +404,7 @@ export default function EventDetailsPage() {
                   <span className="hidden sm:inline">Featured</span>
                 </div>
               )}
-              <div className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
+              <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
                 {event.category}
               </div>
             </div>
@@ -413,7 +429,7 @@ export default function EventDetailsPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
                 <div className="flex items-center gap-3">
-                  <Calendar className="h-5 w-5 text-pink-400" />
+                  <Calendar className="h-5 w-5 text-purple-400" />
                   <div>
                     <p className="text-sm text-gray-400">Date</p>
                     <p className="text-white font-medium">
@@ -428,7 +444,7 @@ export default function EventDetailsPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <Clock className="h-5 w-5 text-pink-400" />
+                  <Clock className="h-5 w-5 text-purple-400" />
                   <div>
                     <p className="text-sm text-gray-400">Time</p>
                     <p className="text-white font-medium">
@@ -438,7 +454,7 @@ export default function EventDetailsPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <MapPin className="h-5 w-5 text-pink-400" />
+                  <MapPin className="h-5 w-5 text-purple-400" />
                   <div>
                     <p className="text-sm text-gray-400">Venue</p>
                     <p className="text-white font-medium">{event.venue.name}</p>
@@ -452,7 +468,7 @@ export default function EventDetailsPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <Users className="h-5 w-5 text-pink-400" />
+                  <Users className="h-5 w-5 text-purple-400" />
                   <div>
                     <p className="text-sm text-gray-400">Attendees</p>
                     <p className="text-white font-medium">
@@ -485,7 +501,7 @@ export default function EventDetailsPage() {
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-lg sm:text-2xl font-bold text-pink-400">
+                  <p className="text-lg sm:text-2xl font-bold text-purple-400">
                     ₦{event.totalRevenue.toLocaleString()}
                   </p>
                   <p className="text-xs sm:text-sm text-gray-400">
@@ -514,7 +530,7 @@ export default function EventDetailsPage() {
                     {event.tags.map((tag, index) => (
                       <span
                         key={index}
-                        className="px-2 sm:px-3 py-1 bg-gradient-to-r from-pink-500/20 to-purple-600/20 border border-pink-500/30 text-pink-300 rounded-full text-xs sm:text-sm"
+                        className="px-2 sm:px-3 py-1 bg-gradient-to-r from-purple-500/20 to-purple-600/20 border border-purple-500/30 text-purple-300 rounded-full text-xs sm:text-sm"
                       >
                         #{tag}
                       </span>
@@ -732,7 +748,7 @@ export default function EventDetailsPage() {
                     key={ticket._id}
                     className={`p-3 sm:p-4 border-2 rounded-lg cursor-pointer transition-all ${
                       selectedTicket === ticket._id
-                        ? "border-pink-500 bg-pink-500/10"
+                        ? "border-purple-500 bg-purple-500/10"
                         : "border-slate-600 hover:border-slate-500"
                     }`}
                     onClick={() => setSelectedTicket(ticket._id)}
@@ -741,7 +757,7 @@ export default function EventDetailsPage() {
                       <h4 className="font-semibold text-white text-sm sm:text-base">
                         {ticket.name}
                       </h4>
-                      <p className="text-base sm:text-lg font-bold text-pink-400">
+                      <p className="text-base sm:text-lg font-bold text-purple-400">
                         {formatPrice(ticket.price)}
                       </p>
                     </div>
@@ -851,7 +867,7 @@ export default function EventDetailsPage() {
                 <button
                   onClick={handleBooking}
                   disabled={!selectedTicket}
-                  className="w-full py-4 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105 disabled:hover:scale-100 flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105 disabled:hover:scale-100 flex items-center justify-center gap-2"
                 >
                   <Ticket className="h-5 w-5" />
                   {selectedTicket
@@ -870,7 +886,7 @@ export default function EventDetailsPage() {
                   </div>
                   <Link
                     href="/auth/signin"
-                    className="w-full py-4 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105 text-center flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105 text-center flex items-center justify-center gap-2"
                   >
                     <ExternalLink className="h-4 w-4" />
                     Sign In to Book Tickets
@@ -903,7 +919,7 @@ export default function EventDetailsPage() {
                     className={`w-12 h-12 sm:w-16 sm:h-16 ${
                       isEventOrganizer
                         ? "bg-gradient-to-r from-blue-500 to-blue-600"
-                        : "bg-gradient-to-r from-pink-500 to-purple-600"
+                        : "bg-gradient-to-r from-purple-500 to-purple-600"
                     } rounded-full flex items-center justify-center flex-shrink-0`}
                   >
                     <span className="text-white font-bold text-sm sm:text-lg">
@@ -934,7 +950,7 @@ export default function EventDetailsPage() {
                       </p>
                     )}
                     {!isEventOrganizer && user && (
-                      <p className="text-pink-400 text-xs mt-1">
+                      <p className="text-purple-400 text-xs mt-1">
                         Click to view full profile
                       </p>
                     )}
@@ -1027,7 +1043,7 @@ export default function EventDetailsPage() {
                       <p className="text-xs text-gray-400">Going</p>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-pink-400">
+                      <p className="text-sm font-semibold text-purple-400">
                         {event.ticketsSold}
                       </p>
                       <p className="text-xs text-gray-400">Tickets Sold</p>
@@ -1234,7 +1250,7 @@ export default function EventDetailsPage() {
                 <div className="p-2 sm:p-4 space-y-6">
                   {/* Profile Header */}
                   <div className="text-center space-y-4 animate-fadeIn">
-                    <div className="w-24 h-24 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto transform transition-transform duration-300 hover:scale-105">
+                    <div className="w-24 h-24 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto transform transition-transform duration-300 hover:scale-105">
                       <span className="text-white font-bold text-2xl">
                         {organizerProfile.firstName[0]}
                         {organizerProfile.lastName[0]}
@@ -1284,7 +1300,7 @@ export default function EventDetailsPage() {
                       <p className="text-xs text-gray-400">Total Attendees</p>
                     </div>
                     <div className="bg-slate-700/50 rounded-lg p-3 text-center transition-all duration-300 hover:bg-slate-700/70 hover:scale-105">
-                      <p className="text-xl font-bold text-pink-400">
+                      <p className="text-xl font-bold text-purple-400">
                         ₦
                         {organizerProfile.statistics?.totalRevenue?.toLocaleString() ||
                           0}
@@ -1359,7 +1375,7 @@ export default function EventDetailsPage() {
                                       closeOrganizerProfile();
                                       router.push(`/events/${event._id}`);
                                     }}
-                                    className="px-2 py-1 bg-pink-600 hover:bg-pink-700 text-white text-xs rounded transition-all duration-300 flex-shrink-0 hover:scale-105"
+                                    className="px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded transition-all duration-300 flex-shrink-0 hover:scale-105"
                                   >
                                     View
                                   </button>
@@ -1500,7 +1516,7 @@ export default function EventDetailsPage() {
                     className="space-y-3 animate-slideUp"
                     style={{ animationDelay: "600ms" }}
                   >
-                    <button className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white rounded-lg transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105 hover:shadow-lg">
+                    <button className="w-full py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105 hover:shadow-lg">
                       <ExternalLink className="h-4 w-4" />
                       Contact Organizer
                     </button>

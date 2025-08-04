@@ -269,7 +269,7 @@ export default function SignUpPage() {
               {/* Logo - Inside the card */}
               <div className="flex justify-center mb-6 fade-in-up">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
                     <Ticket className="h-6 w-6 text-white" />
                   </div>
                   <span className="text-2xl font-bold text-white">
@@ -300,7 +300,7 @@ export default function SignUpPage() {
                       onClick={() => handleInputChange("accountType", "user")}
                       className={`w-full p-4 rounded-xl border-2 transition-all duration-300 text-left ${
                         formData.accountType === "user"
-                          ? "border-pink-500 bg-pink-500/10"
+                          ? "border-purple-500 bg-purple-500/10"
                           : "border-slate-600 hover:border-slate-500"
                       }`}
                     >
@@ -308,7 +308,7 @@ export default function SignUpPage() {
                         <div
                           className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                             formData.accountType === "user"
-                              ? "bg-pink-500"
+                              ? "bg-purple-500"
                               : "bg-slate-700"
                           }`}
                         >
@@ -323,7 +323,7 @@ export default function SignUpPage() {
                           </p>
                         </div>
                         {formData.accountType === "user" && (
-                          <Check className="h-5 w-5 text-pink-500" />
+                          <Check className="h-5 w-5 text-purple-500" />
                         )}
                       </div>
                     </button>
@@ -334,7 +334,7 @@ export default function SignUpPage() {
                       }
                       className={`w-full p-4 rounded-xl border-2 transition-all duration-300 text-left ${
                         formData.accountType === "organizer"
-                          ? "border-pink-500 bg-pink-500/10"
+                          ? "border-purple-500 bg-purple-500/10"
                           : "border-slate-600 hover:border-slate-500"
                       }`}
                     >
@@ -342,7 +342,7 @@ export default function SignUpPage() {
                         <div
                           className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                             formData.accountType === "organizer"
-                              ? "bg-pink-500"
+                              ? "bg-purple-500"
                               : "bg-slate-700"
                           }`}
                         >
@@ -357,7 +357,7 @@ export default function SignUpPage() {
                           </p>
                         </div>
                         {formData.accountType === "organizer" && (
-                          <Check className="h-5 w-5 text-pink-500" />
+                          <Check className="h-5 w-5 text-purple-500" />
                         )}
                       </div>
                     </button>
@@ -426,7 +426,7 @@ export default function SignUpPage() {
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                             handleInputChange("email", e.target.value)
                           }
-                          className="pl-9 h-10 w-full bg-slate-700/50 border border-slate-600 text-white placeholder:text-gray-400 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm px-3 py-2"
+                          className="pl-9 h-10 w-full bg-slate-700/50 border border-slate-600 text-white placeholder:text-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm px-3 py-2"
                         />
                       </div>
                     </div>
@@ -446,7 +446,7 @@ export default function SignUpPage() {
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                             handleInputChange("phone", e.target.value)
                           }
-                          className="pl-9 h-10 w-full bg-slate-700/50 border border-slate-600 text-white placeholder:text-gray-400 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm px-3 py-2"
+                          className="pl-9 h-10 w-full bg-slate-700/50 border border-slate-600 text-white placeholder:text-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm px-3 py-2"
                         />
                       </div>
                     </div>
@@ -478,7 +478,7 @@ export default function SignUpPage() {
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                             handleInputChange("password", e.target.value)
                           }
-                          className="pl-9 h-10 w-full bg-slate-700/50 border border-slate-600 text-white placeholder:text-gray-400 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm px-3 py-2"
+                          className="pl-9 h-10 w-full bg-slate-700/50 border border-slate-600 text-white placeholder:text-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm px-3 py-2"
                         />
                       </div>
                     </div>
@@ -496,7 +496,7 @@ export default function SignUpPage() {
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                             handleInputChange("confirmPassword", e.target.value)
                           }
-                          className="pl-9 h-10 w-full bg-slate-700/50 border border-slate-600 text-white placeholder:text-gray-400 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm px-3 py-2"
+                          className="pl-9 h-10 w-full bg-slate-700/50 border border-slate-600 text-white placeholder:text-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm px-3 py-2"
                         />
                       </div>
                       {formData.confirmPassword &&
@@ -566,7 +566,7 @@ export default function SignUpPage() {
                     type="button"
                     onClick={nextStep}
                     disabled={!isStepValid()}
-                    className="flex-1 h-10 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    className="flex-1 h-10 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   >
                     <span className="text-sm">Continue</span>
                     <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
@@ -576,7 +576,7 @@ export default function SignUpPage() {
                     type="button"
                     onClick={handleSubmit}
                     disabled={!isStepValid() || isLoading}
-                    className="flex-1 h-10 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    className="flex-1 h-10 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   >
                     <span className="text-sm">
                       {isLoading ? "Creating Account..." : "Create Account"}
@@ -591,7 +591,7 @@ export default function SignUpPage() {
                   Already have an account?{" "}
                   <Link
                     href="/auth/signin"
-                    className="text-pink-400 hover:text-pink-300 font-semibold"
+                    className="text-purple-400 hover:text-purple-300 font-semibold"
                   >
                     Sign in
                   </Link>

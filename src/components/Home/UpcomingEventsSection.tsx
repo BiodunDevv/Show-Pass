@@ -121,7 +121,7 @@ export function UpcomingEventsSection() {
             <select
               value={weekdays}
               onChange={(e) => setWeekdays(e.target.value)}
-              className="px-4 py-3 rounded-xl border-2 border-gray-600 bg-slate-700 text-white hover:border-pink-500 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500"
+              className="px-4 py-3 rounded-xl border-2 border-gray-600 bg-slate-700 text-white hover:border-purple-500 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
               <option value="">All Days</option>
               <option value="weekdays">Weekdays</option>
@@ -131,7 +131,7 @@ export function UpcomingEventsSection() {
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="px-4 py-3 rounded-xl border-2 border-gray-600 bg-slate-700 text-white hover:border-pink-500 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500"
+              className="px-4 py-3 rounded-xl border-2 border-gray-600 bg-slate-700 text-white hover:border-purple-500 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
               <option value="">All Categories</option>
               <option value="Technology">Technology</option>
@@ -175,7 +175,7 @@ export function UpcomingEventsSection() {
               return (
                 <div
                   key={event._id}
-                  className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-105 hover:border-pink-500/30 group slide-in-up"
+                  className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-105 hover:border-purple-500/30 group slide-in-up"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <div className="relative h-56 overflow-hidden">
@@ -193,38 +193,38 @@ export function UpcomingEventsSection() {
                         {dateInfo.month}
                       </div>
                     </div>
-                    <div className="absolute top-4 right-4 bg-gradient-to-r from-pink-500 to-purple-600 text-white px-3 py-1 rounded-full font-semibold shadow-lg">
+                    <div className="absolute top-4 right-4 border border-purple-500 bg-purple-900/30 text-white px-3 py-1 rounded-full font-semibold shadow-lg">
                       {price}
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
 
                   <div className="p-6">
-                    <h3 className="font-bold text-xl mb-3 text-white line-clamp-2 group-hover:text-pink-400 transition-colors">
+                    <h3 className="font-bold text-xl mb-3 text-white line-clamp-2 group-hover:text-purple-400 transition-colors">
                       {event.title}
                     </h3>
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-gray-300">
-                        <MapPin className="h-4 w-4 text-pink-400" />
+                        <MapPin className="h-4 w-4 text-white" />
                         <span className="text-sm">
                           {event.venue.city}, {event.venue.state}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-gray-300">
-                        <Users className="h-4 w-4 text-pink-400" />
+                        <Users className="h-4 w-4 text-white" />
                         <span className="text-sm">
                           {event.currentAttendees} / {event.maxAttendees}{" "}
                           attendees
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-gray-300">
-                        <Calendar className="h-4 w-4 text-pink-400" />
+                        <Calendar className="h-4 w-4 text-white" />
                         <span className="text-sm">{event.category}</span>
                       </div>
                     </div>
                     <Link
                       href={`/events/${event._id}`}
-                      className="block w-full mt-4 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white text-center rounded-xl font-semibold transition-all duration-300 hover:scale-105"
+                      className="block w-full mt-4 px-4 py-2 border border-purple-500 bg-purple-900 text-white text-center rounded-xl font-semibold transition-all duration-300 hover:scale-105"
                     >
                       View Details
                     </Link>
@@ -247,7 +247,7 @@ export function UpcomingEventsSection() {
         <div className="text-center mt-16 slide-in-up">
           <Link
             href="/events"
-            className="inline-block px-12 py-4 text-lg rounded-full border-2 border-pink-500 text-pink-400 hover:bg-pink-500 hover:text-white font-semibold transition-all duration-300 hover:scale-105"
+            className="inline-block px-12 py-4 text-lg rounded-full border border-purple-500 text-white bg-purple-900 shadow-lg shadow-purple-900/20 font-semibold transition-all duration-300 hover:scale-105"
           >
             Load More Events
           </Link>

@@ -88,7 +88,7 @@ export default function ForgotPasswordPage() {
                 </h1>
                 <p className="text-gray-300 mb-6">
                   We've sent a password reset link to{" "}
-                  <span className="text-pink-400 font-medium">{email}</span>
+                  <span className="text-purple-400 font-medium">{email}</span>
                 </p>
                 <p className="text-sm text-gray-400 mb-8">
                   Don't see the email? Check your spam folder or try again.
@@ -96,13 +96,13 @@ export default function ForgotPasswordPage() {
                 <div className="space-y-3">
                   <button
                     onClick={() => setIsSubmitted(false)}
-                    className="w-full h-10 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-sm"
+                    className="w-full h-10 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-sm"
                   >
                     Try Again
                   </button>
                   <Link
                     href="/auth/signin"
-                    className="block w-full text-center text-xs text-gray-400 hover:text-pink-300 transition-colors"
+                    className="block w-full text-center text-xs text-gray-400 hover:text-purple-300 transition-colors"
                   >
                     Back to Sign In
                   </Link>
@@ -253,7 +253,7 @@ export default function ForgotPasswordPage() {
               {/* Logo */}
               <div className="flex justify-center mb-6 fade-in-up">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
                     <Ticket className="h-6 w-6 text-white" />
                   </div>
                   <span className="text-2xl font-bold text-white">
@@ -293,7 +293,7 @@ export default function ForgotPasswordPage() {
                         placeholder="Enter your email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full pl-9 h-10 bg-slate-700/50 border border-slate-600 text-white placeholder:text-gray-400 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm focus:outline-none"
+                        className="w-full pl-9 h-10 bg-slate-700/50 border border-slate-600 text-white placeholder:text-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm focus:outline-none"
                         required
                       />
                     </div>
@@ -301,7 +301,7 @@ export default function ForgotPasswordPage() {
 
                   <button
                     type="submit"
-                    className="w-full h-10 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full h-10 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -320,7 +320,7 @@ export default function ForgotPasswordPage() {
                     Remember your password?{" "}
                     <Link
                       href="/auth/signin"
-                      className="text-pink-400 hover:text-pink-300 font-semibold"
+                      className="text-purple-400 hover:text-purple-300 font-semibold"
                     >
                       Sign In
                     </Link>

@@ -165,7 +165,7 @@ export default function VerifyPage() {
               {/* Logo */}
               <div className="flex justify-center mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
                     <Ticket className="h-6 w-6 text-white" />
                   </div>
                   <span className="text-2xl font-bold text-white">
@@ -193,7 +193,7 @@ export default function VerifyPage() {
                           type="email"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                          className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                           placeholder="Enter your email address"
                           required
                         />
@@ -214,7 +214,7 @@ export default function VerifyPage() {
                             .slice(0, 6);
                           setVerificationCode(value);
                         }}
-                        className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent text-center text-lg tracking-widest font-mono"
+                        className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-center text-lg tracking-widest font-mono"
                         placeholder="000000"
                         maxLength={6}
                         required
@@ -227,7 +227,7 @@ export default function VerifyPage() {
                     <button
                       type="submit"
                       disabled={verificationCode.length !== 6}
-                      className="w-full h-12 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                      className="w-full h-12 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                     >
                       Verify Email
                     </button>
@@ -241,7 +241,7 @@ export default function VerifyPage() {
                         type="button"
                         onClick={handleResendCode}
                         disabled={isResending || !email}
-                        className="inline-flex items-center gap-2 text-pink-400 hover:text-pink-300 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isResending ? (
                           <>
@@ -280,7 +280,7 @@ export default function VerifyPage() {
 
                     <div className="text-sm text-gray-400">
                       Redirecting to home in{" "}
-                      <span className="text-pink-400 font-semibold">
+                      <span className="text-purple-400 font-semibold">
                         {countdown}
                       </span>{" "}
                       seconds...
@@ -288,7 +288,7 @@ export default function VerifyPage() {
 
                     <button
                       onClick={() => router.push("/")}
-                      className="w-full h-10 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group"
+                      className="w-full h-10 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group"
                     >
                       <span className="flex items-center gap-2 text-sm justify-center">
                         Continue to Home
@@ -306,7 +306,7 @@ export default function VerifyPage() {
                         setStatus("initial");
                         setVerificationCode("");
                       }}
-                      className="w-full h-10 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-sm"
+                      className="w-full h-10 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-sm"
                     >
                       Try Again
                     </button>
@@ -324,7 +324,7 @@ export default function VerifyPage() {
                   <div className="space-y-2">
                     <div className="w-full bg-slate-700 rounded-full h-2">
                       <motion.div
-                        className="bg-gradient-to-r from-pink-500 to-purple-600 h-2 rounded-full"
+                        className="bg-gradient-to-r from-purple-500 to-purple-600 h-2 rounded-full"
                         initial={{ width: "0%" }}
                         animate={{ width: "100%" }}
                         transition={{ duration: 2, ease: "easeInOut" }}

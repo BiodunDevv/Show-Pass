@@ -22,17 +22,28 @@ import Image from "next/image";
 import Link from "next/link";
 import { useArticleStore } from "@/store/useArticleStore";
 
-// Available categories for filtering
-const categories = [
-  { id: "all", name: "All", icon: "📚", count: 0 },
-  { id: "featured", name: "Featured", icon: "⭐", count: 0 },
-  { id: "Technology", name: "Technology", icon: "💻", count: 0 },
-  { id: "Marketing", name: "Marketing", icon: "📈", count: 0 },
-  { id: "Community", name: "Community", icon: "👥", count: 0 },
-  { id: "Business", name: "Business", icon: "💼", count: 0 },
-  { id: "Innovation", name: "Innovation", icon: "🚀", count: 0 },
-  { id: "Events", name: "Events", icon: "🎯", count: 0 },
-];
+// Category icons mapping
+const categoryIcons: { [key: string]: string } = {
+  all: "📚",
+  featured: "⭐",
+  Technology: "💻",
+  Marketing: "�",
+  Community: "👥",
+  Business: "💼",
+  Entertainment: "🎭",
+  Education: "🎓",
+  Health: "🏥",
+  Sports: "⚽",
+  Finance: "💰",
+  Travel: "✈️",
+  Food: "🍽️",
+  Fashion: "👗",
+  Lifestyle: "🌟",
+  News: "�",
+  Tips: "💡",
+  Innovation: "🚀",
+  Events: "🎯",
+};
 
 export default function BlogPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -41,48 +52,77 @@ export default function BlogPage() {
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isArticleHovered, setIsArticleHovered] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const articlesPerPage = 6;
 
-  const { articles, fetchArticles, isLoading, error } = useArticleStore();
+  const {
+    articles,
+    categories,
+    fetchArticles,
+    fetchArticleCategories,
+    isLoading,
+    error,
+  } = useArticleStore();
 
   // Ensure we're on the client side
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // Fetch articles only on client side
+  // Fetch articles and categories on client side
   useEffect(() => {
     if (!isClient) return;
 
-    const loadArticles = async () => {
+    const loadData = async () => {
       try {
-        await fetchArticles();
+        // Fetch articles with pagination
+        const result = await fetchArticles({
+          page: currentPage,
+          limit: articlesPerPage,
+        });
+        setTotalPages(result.meta.pagination.pages);
+        // Fetch categories
+        await fetchArticleCategories();
       } catch (error) {
-        console.error("Failed to load articles:", error);
+        console.error("Failed to load data:", error);
       }
     };
 
-    loadArticles();
-  }, [isClient, fetchArticles]);
+    loadData();
+  }, [isClient, currentPage, fetchArticles, fetchArticleCategories]);
+
+  // Create dynamic categories with counts
+  const dynamicCategories = React.useMemo(() => {
+    const baseCategories = [
+      {
+        id: "all",
+        name: "All",
+        icon: categoryIcons.all || "📚",
+        count: articles.length,
+      },
+      {
+        id: "featured",
+        name: "Featured",
+        icon: categoryIcons.featured || "⭐",
+        count: articles.filter((article) => article.featured).length,
+      },
+    ];
+
+    const apiCategories = categories.map((category) => ({
+      id: category,
+      name: category,
+      icon: categoryIcons[category] || "📂",
+      count: articles.filter((article) => article.category === category).length,
+    }));
+
+    return [...baseCategories, ...apiCategories];
+  }, [articles, categories]);
 
   // Get all unique tags across articles
   const allTags = Array.from(
     new Set(articles.flatMap((article) => article.tags || []))
   ).sort();
-
-  // Update category counts
-  const categoriesWithCounts = categories.map((category) => {
-    let count = 0;
-    if (category.id === "all") {
-      count = articles.length;
-    } else if (category.id === "featured") {
-      count = articles.filter((article) => article.featured).length;
-    } else {
-      count = articles.filter(
-        (article) => article.category === category.id
-      ).length;
-    }
-    return { ...category, count };
-  });
 
   // Filter articles based on active category, search query, and selected tags
   const filteredArticles = articles.filter((article) => {
@@ -121,6 +161,12 @@ export default function BlogPage() {
 
     return true;
   });
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -305,7 +351,7 @@ export default function BlogPage() {
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <div className="flex flex-wrap gap-1.5 sm:gap-2 items-center justify-center">
-                {categoriesWithCounts.map((category) => (
+                {dynamicCategories.map((category) => (
                   <motion.button
                     key={category.id}
                     onClick={() => setSelectedCategory(category.id)}
@@ -555,22 +601,28 @@ export default function BlogPage() {
                     {/* Article footer */}
                     <div className="p-2.5 sm:p-3 pt-0">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <div className="w-6 h-6 sm:w-8 sm:h-8 border border-purple-500 bg-purple-900/30 text-purple-300 shadow-lg shadow-purple-900/20 rounded-full flex items-center justify-center flex-shrink-0">
                             <User className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
                           </div>
-                          <div className="min-w-0">
+                          <div className="min-w-0 flex-1">
                             <p className="text-xs sm:text-sm font-medium text-white truncate">
-                              {article.author}
+                              {article.author || "Unknown Author"}
                             </p>
-                            <p className="text-xs text-gray-400">Author</p>
+                            <div className="flex items-center gap-1 text-xs text-gray-400">
+                              <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3 flex-shrink-0" />
+                              <span className="truncate">
+                                {article.views} views
+                              </span>
+                            </div>
                           </div>
                         </div>
                         <Link
                           href={`/blog/${article._id}`}
-                          className="inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white rounded-md sm:rounded-lg transition-all duration-300 hover:scale-105 text-xs sm:text-sm font-medium"
+                          className="inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 border border-purple-500 bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-900/20 rounded-md sm:rounded-lg transition-all duration-300 hover:scale-105 text-xs sm:text-sm font-medium flex-shrink-0"
                         >
                           <span className="hidden sm:inline">Read</span>
+                          <span className="sm:hidden">📖</span>
                           <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Link>
                       </div>
@@ -581,18 +633,106 @@ export default function BlogPage() {
             </motion.div>
           )}
 
-          {/* Load More Button */}
-          {!isLoading && !error && filteredArticles.length > 0 && (
-            <div className="text-center mt-8 sm:mt-12">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-6 sm:px-8 py-3 border-2 border-purple-500 text-purple-400 hover:bg-purple-500 hover:text-white font-semibold rounded-lg transition-all duration-300"
-              >
-                Load More Articles
-              </motion.button>
-            </div>
-          )}
+          {/* Pagination */}
+          {!isLoading &&
+            !error &&
+            filteredArticles.length > 0 &&
+            totalPages > 1 && (
+              <div className="flex justify-center mt-8 sm:mt-12">
+                <div className="flex items-center gap-1 sm:gap-2 bg-[#1E2132]/70 backdrop-blur-sm border border-[#2E313C] rounded-xl p-2">
+                  {/* Previous button */}
+                  <motion.button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    whileHover={{ scale: currentPage === 1 ? 1 : 1.05 }}
+                    whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
+                    className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-lg transition-all duration-300 ${
+                      currentPage === 1
+                        ? "text-gray-600 cursor-not-allowed"
+                        : "text-gray-300 hover:text-white hover:bg-purple-600/20 border border-transparent hover:border-purple-500/30"
+                    }`}
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 19l-7-7 7-7"
+                      />
+                    </svg>
+                  </motion.button>
+
+                  {/* Page numbers */}
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+
+                    return (
+                      <motion.button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-lg text-sm sm:text-base font-medium transition-all duration-300 ${
+                          currentPage === pageNum
+                            ? "border border-purple-500 bg-gradient-to-r from-purple-500 to-purple-600 text-white"
+                            : "text-gray-300 hover:text-white hover:bg-purple-600/20 border border-transparent hover:border-purple-500/30"
+                        }`}
+                      >
+                        {pageNum}
+                      </motion.button>
+                    );
+                  })}
+
+                  {/* Show ellipsis if there are more pages */}
+                  {totalPages > 5 && currentPage < totalPages - 2 && (
+                    <span className="text-gray-500 px-2">...</span>
+                  )}
+
+                  {/* Next button */}
+                  <motion.button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    whileHover={{
+                      scale: currentPage === totalPages ? 1 : 1.05,
+                    }}
+                    whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
+                    className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-lg transition-all duration-300 ${
+                      currentPage === totalPages
+                        ? "text-gray-600 cursor-not-allowed"
+                        : "text-gray-300 hover:text-white hover:bg-purple-600/20 border border-transparent hover:border-purple-500/30"
+                    }`}
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </motion.button>
+                </div>
+              </div>
+            )}
         </div>
 
         {/* Quick tip toast - for featured articles */}

@@ -104,7 +104,7 @@ export function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3 group">
             <div
-              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 hover-scale bg-gradient-to-r from-pink-500 to-purple-600`}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 hover-scale bg-gradient-to-r from-purple-500 to-purple-600`}
             >
               <Ticket
                 className={`h-5 w-5 ${scrolled ? "text-white" : "text-white"}`}
@@ -134,7 +134,7 @@ export function Navbar() {
                 href={item.href}
                 className={`font-medium transition-all duration-300 hover-scale ${
                   scrolled
-                    ? "text-gray-300 hover:text-pink-400"
+                    ? "text-gray-300 hover:text-purple-400"
                     : "text-white/90 hover:text-white"
                 }`}
               >
@@ -148,7 +148,7 @@ export function Navbar() {
                   href="/organizer/events"
                   className={`font-medium transition-all duration-300 hover-scale ${
                     scrolled
-                      ? "text-gray-300 hover:text-pink-400"
+                      ? "text-gray-300 hover:text-purple-400"
                       : "text-white/90 hover:text-white"
                   }`}
                 >
@@ -158,7 +158,7 @@ export function Navbar() {
                   href="/organizer/analytics"
                   className={`font-medium transition-all duration-300 hover-scale ${
                     scrolled
-                      ? "text-gray-300 hover:text-pink-400"
+                      ? "text-gray-300 hover:text-purple-400"
                       : "text-white/90 hover:text-white"
                   }`}
                 >
@@ -173,7 +173,7 @@ export function Navbar() {
                   href="/my-tickets"
                   className={`font-medium transition-all duration-300 hover-scale ${
                     scrolled
-                      ? "text-gray-300 hover:text-pink-400"
+                      ? "text-gray-300 hover:text-purple-400"
                       : "text-white/90 hover:text-white"
                   }`}
                 >
@@ -183,7 +183,7 @@ export function Navbar() {
                   href="/favorites"
                   className={`font-medium transition-all duration-300 hover-scale ${
                     scrolled
-                      ? "text-gray-300 hover:text-pink-400"
+                      ? "text-gray-300 hover:text-purple-400"
                       : "text-white/90 hover:text-white"
                   }`}
                 >
@@ -199,13 +199,9 @@ export function Navbar() {
               <div className="relative" data-dropdown>
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className={`relative h-10 w-10 rounded-full transition-all duration-300 hover-scale ${
-                    scrolled
-                      ? "bg-slate-800 hover:bg-slate-700"
-                      : "bg-white/10 hover:bg-white/20 backdrop-blur-sm"
-                  }`}
+                  className={`relative h-10 w-10 rounded-full transition-all duration-300 hover-scale`}
                 >
-                  <div className="h-8 w-8 mx-auto mt-1 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center">
+                  <div className="h-8 w-8 mx-auto mt-1 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center">
                     <span className="text-white font-semibold text-sm">
                       {user.firstName?.charAt(0) || user.name?.charAt(0) || "U"}
                     </span>
@@ -321,7 +317,7 @@ export function Navbar() {
                   href={item.href}
                   className={`font-medium transition-colors duration-300 hover-translate ${
                     scrolled
-                      ? "text-gray-300 hover:text-pink-400"
+                      ? "text-gray-300 hover:text-purple-400"
                       : "text-white/90 hover:text-white"
                   }`}
                   onClick={() => setIsOpen(false)}
@@ -336,7 +332,7 @@ export function Navbar() {
                     href="/organizer/events"
                     className={`font-medium transition-colors duration-300 hover-translate ${
                       scrolled
-                        ? "text-gray-300 hover:text-pink-400"
+                        ? "text-gray-300 hover:text-purple-400"
                         : "text-white/90 hover:text-white"
                     }`}
                     onClick={() => setIsOpen(false)}
@@ -347,7 +343,7 @@ export function Navbar() {
                     href="/organizer/analytics"
                     className={`font-medium transition-colors duration-300 hover-translate ${
                       scrolled
-                        ? "text-gray-300 hover:text-pink-400"
+                        ? "text-gray-300 hover:text-purple-400"
                         : "text-white/90 hover:text-white"
                     }`}
                     onClick={() => setIsOpen(false)}
@@ -363,7 +359,7 @@ export function Navbar() {
                     href="/my-tickets"
                     className={`font-medium transition-colors duration-300 hover-translate ${
                       scrolled
-                        ? "text-gray-300 hover:text-pink-400"
+                        ? "text-gray-300 hover:text-purple-400"
                         : "text-white/90 hover:text-white"
                     }`}
                     onClick={() => setIsOpen(false)}
@@ -374,7 +370,7 @@ export function Navbar() {
                     href="/favorites"
                     className={`font-medium transition-colors duration-300 hover-translate ${
                       scrolled
-                        ? "text-gray-300 hover:text-pink-400"
+                        ? "text-gray-300 hover:text-purple-400"
                         : "text-white/90 hover:text-white"
                     }`}
                     onClick={() => setIsOpen(false)}
@@ -394,7 +390,7 @@ export function Navbar() {
                     href="/profile"
                     className={`font-medium transition-colors duration-300 hover-translate ${
                       scrolled
-                        ? "text-gray-300 hover:text-pink-400"
+                        ? "text-gray-300 hover:text-purple-400"
                         : "text-white/90 hover:text-white"
                     }`}
                     onClick={() => setIsOpen(false)}
@@ -405,7 +401,7 @@ export function Navbar() {
                     onClick={handleLogout}
                     className={`text-left font-medium transition-colors duration-300 hover-translate ${
                       scrolled
-                        ? "text-gray-300 hover:text-pink-400"
+                        ? "text-gray-300 hover:text-purple-400"
                         : "text-white/90 hover:text-white"
                     }`}
                   >

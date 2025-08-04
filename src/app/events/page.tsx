@@ -22,21 +22,6 @@ import {
 import Image from "next/image";
 import { useEventStore } from "@/store/useEventStore";
 
-// Available categories for filtering
-const categories = [
-  { id: "all", name: "All", icon: "🎯", count: 0 },
-  { id: "featured", name: "Featured", icon: "⭐", count: 0 },
-  { id: "Technology", name: "Technology", icon: "💻", count: 0 },
-  { id: "Music", name: "Music", icon: "🎵", count: 0 },
-  { id: "Business", name: "Business", icon: "💼", count: 0 },
-  { id: "Food", name: "Food & Drink", icon: "🍽️", count: 0 },
-  { id: "Fashion", name: "Fashion", icon: "👗", count: 0 },
-  { id: "Entertainment", name: "Entertainment", icon: "🎭", count: 0 },
-  { id: "Sports", name: "Sports", icon: "⚽", count: 0 },
-  { id: "Education", name: "Education", icon: "📚", count: 0 },
-  { id: "Health", name: "Health & Wellness", icon: "🏥", count: 0 },
-];
-
 export default function EventsPage() {
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
@@ -45,8 +30,17 @@ export default function EventsPage() {
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isEventHovered, setIsEventHovered] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const eventsPerPage = 6;
 
-  const { events, fetchEvents, isLoading, error } = useEventStore();
+  const {
+    events,
+    fetchEvents,
+    fetchEventCategories,
+    categories: apiCategories,
+    isLoading,
+    error,
+  } = useEventStore();
 
   // Ensure we're on the client side and handle URL parameters
   useEffect(() => {
@@ -82,33 +76,69 @@ export default function EventsPage() {
     }
   }, [searchParams]);
 
-  // Fetch events only on client side
+  // Fetch events and categories only on client side
   useEffect(() => {
     if (!isClient) return;
 
-    const loadEvents = async () => {
+    const loadEventsAndCategories = async () => {
       try {
-        await fetchEvents({
-          page: 1,
-          limit: 50,
-          sortBy: "startDate",
-          sortOrder: "asc",
-        });
+        // Fetch both events and categories
+        await Promise.all([
+          fetchEvents({
+            page: 1,
+            limit: 50,
+            sortBy: "startDate",
+            sortOrder: "asc",
+          }),
+          fetchEventCategories(),
+        ]);
       } catch (error) {
-        console.error("Failed to load events:", error);
+        console.error("Failed to load events and categories:", error);
       }
     };
 
-    loadEvents();
-  }, [isClient, fetchEvents]);
+    loadEventsAndCategories();
+  }, [isClient, fetchEvents, fetchEventCategories]);
 
   // Get all unique tags/categories across events (if events have tags)
   const allTags = Array.from(
     new Set(events.flatMap((event) => event.tags || []))
   ).sort();
 
+  // Create category icons mapping
+  const categoryIcons: { [key: string]: string } = {
+    Technology: "💻",
+    Music: "🎵",
+    Business: "💼",
+    Food: "🍽️",
+    Fashion: "👗",
+    Entertainment: "🎭",
+    Sports: "⚽",
+    Education: "📚",
+    Health: "🏥",
+    Arts: "🎨",
+    Other: "📅",
+  };
+
+  // Create dynamic categories array from API response
+  const dynamicCategories = [
+    { id: "all", name: "All", icon: "🎯", count: 0 },
+    { id: "featured", name: "Featured", icon: "⭐", count: 0 },
+    ...(apiCategories || []).map((category) => ({
+      id: category,
+      name:
+        category === "Food"
+          ? "Food & Drink"
+          : category === "Health"
+          ? "Health & Wellness"
+          : category,
+      icon: categoryIcons[category] || "📅",
+      count: 0,
+    })),
+  ];
+
   // Update category counts
-  const categoriesWithCounts = categories.map((category) => {
+  const categoriesWithCounts = dynamicCategories.map((category) => {
     let count = 0;
     if (category.id === "all") {
       count = events.length;
@@ -155,6 +185,25 @@ export default function EventsPage() {
 
     return true;
   });
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
+  const startIndex = (currentPage - 1) * eventsPerPage;
+  const endIndex = startIndex + eventsPerPage;
+  const currentEvents = filteredEvents.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory, selectedTags]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Scroll to top of events section
+    document
+      .getElementById("events-section")
+      ?.scrollIntoView({ behavior: "smooth" });
+  };
 
   const formatPrice = (ticketTypes: any[]) => {
     if (!ticketTypes || ticketTypes.length === 0) return "Free";
@@ -270,7 +319,7 @@ export default function EventsPage() {
               {/* Search/Category Results Indicator */}
               {(searchParams.get("search") || searchParams.get("category")) && (
                 <div className="mb-4 sm:mb-6">
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500/10 to-purple-600/10 border border-pink-500/30 rounded-full text-pink-300 text-sm sm:text-base">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500/10 to-cyan-600/10 border border-blue-500/30 rounded-full text-blue-300 text-sm sm:text-base">
                     {searchParams.get("search") && (
                       <>
                         <Search className="h-4 w-4" />
@@ -528,13 +577,14 @@ export default function EventsPage() {
             </motion.div>
           ) : (
             <motion.div
+              id="events-section"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 auto-rows-fr p-1"
               key="events-grid"
             >
-              {filteredEvents.map((event) => {
+              {currentEvents.map((event) => {
                 const dateInfo = formatDate(event.startDate);
                 const price = formatPrice(event.ticketTypes);
 
@@ -609,7 +659,7 @@ export default function EventsPage() {
                         </div>
 
                         {/* Price badge */}
-                        <div className="absolute top-2 sm:top-3 right-2 sm:right-3 bg-pink-500 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold shadow-lg">
+                        <div className="absolute top-2 sm:top-3 right-2 sm:right-3 border border-purple-500 bg-purple-900/30 shadow-purple-900/20 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold">
                           {price}
                         </div>
 
@@ -658,17 +708,17 @@ export default function EventsPage() {
                         {/* Event metadata */}
                         <div className="mb-2 sm:mb-4 space-y-1">
                           <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <Calendar className="h-3 w-3 text-pink-400" />
+                            <Calendar className="h-3 w-3 text-white" />
                             <span>{dateInfo.fullDate}</span>
                           </div>
                           <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <Clock className="h-3 w-3 text-pink-400" />
+                            <Clock className="h-3 w-3 text-white" />
                             <span>
                               {event.startTime} - {event.endTime}
                             </span>
                           </div>
                           <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <MapPin className="h-3 w-3 text-pink-400" />
+                            <MapPin className="h-3 w-3 text-white" />
                             <span>
                               {event.venue.city}, {event.venue.state}
                             </span>
@@ -708,8 +758,8 @@ export default function EventsPage() {
                       <div className="p-2.5 sm:p-3 pt-0">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2 min-w-0">
-                            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
-                              <Users className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
+                            <div className="w-6 h-6 sm:w-8 sm:h-8 border border-purple-500 bg-purple-900/30 text-white shadow-lg shadow-purple-900/20 font-semibold transition-all duration-300 hover:scale-105 rounded-full flex items-center justify-center">
+                              <Users className="h-3 w-3" />
                             </div>
                             <div className="min-w-0">
                               <p className="text-xs sm:text-sm font-medium text-white truncate">
@@ -720,7 +770,7 @@ export default function EventsPage() {
                           </div>
                           <Link
                             href={`/events/${event._id}`}
-                            className="inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white rounded-md sm:rounded-lg transition-all duration-300 hover:scale-105 text-xs sm:text-sm font-medium"
+                            className="inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 border border-purple-500 bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-900/20 rounded-md sm:rounded-lg transition-all duration-300 hover:scale-105 text-xs sm:text-sm font-medium"
                           >
                             <span className="hidden sm:inline">View</span>
                             <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -734,16 +784,81 @@ export default function EventsPage() {
             </motion.div>
           )}
 
-          {/* Load More Button */}
-          {!isLoading && !error && filteredEvents.length > 0 && (
-            <div className="text-center mt-8 sm:mt-12">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-6 sm:px-8 py-3 border-2 border-purple-500 text-purple-400 hover:bg-purple-500 hover:text-white font-semibold rounded-lg transition-all duration-300"
-              >
-                Load More Events
-              </motion.button>
+          {/* Pagination */}
+          {!isLoading && !error && filteredEvents.length > eventsPerPage && (
+            <div className="flex flex-col items-center space-y-4 mt-8 sm:mt-12">
+              {/* Pagination Info */}
+              <p className="text-gray-400 text-sm">
+                Showing {startIndex + 1}-
+                {Math.min(endIndex, filteredEvents.length)} of{" "}
+                {filteredEvents.length} events
+              </p>
+
+              {/* Pagination Controls */}
+              <div className="flex items-center space-x-2">
+                {/* Previous Button */}
+                <motion.button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-2 rounded-lg border border-slate-600 text-gray-400 hover:text-white hover:border-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                  whileHover={{ scale: currentPage === 1 ? 1 : 1.05 }}
+                  whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
+                >
+                  Previous
+                </motion.button>
+
+                {/* Page Numbers */}
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => {
+                      // Show first page, last page, current page, and pages around current page
+                      if (
+                        page === 1 ||
+                        page === totalPages ||
+                        (page >= currentPage - 1 && page <= currentPage + 1)
+                      ) {
+                        return (
+                          <motion.button
+                            key={page}
+                            onClick={() => handlePageChange(page)}
+                            className={`w-10 h-10 rounded-lg font-medium transition-all duration-300 ${
+                              currentPage === page
+                                ? "border border-purple-500 bg-gradient-to-r from-purple-500 to-purple-600 text-white"
+                                : "text-gray-300 hover:text-white hover:bg-purple-600/20 border border-transparent hover:border-purple-500/30"
+                            }`}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            {page}
+                          </motion.button>
+                        );
+                      } else if (
+                        (page === currentPage - 2 && currentPage > 3) ||
+                        (page === currentPage + 2 &&
+                          currentPage < totalPages - 2)
+                      ) {
+                        return (
+                          <span key={page} className="text-gray-500 px-2">
+                            ...
+                          </span>
+                        );
+                      }
+                      return null;
+                    }
+                  )}
+                </div>
+
+                {/* Next Button */}
+                <motion.button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-2 rounded-lg border border-slate-600 text-gray-400 hover:text-white hover:border-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                  whileHover={{ scale: currentPage === totalPages ? 1 : 1.05 }}
+                  whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
+                >
+                  Next
+                </motion.button>
+              </div>
             </div>
           )}
         </div>

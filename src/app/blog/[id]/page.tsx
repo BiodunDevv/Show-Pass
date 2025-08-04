@@ -100,6 +100,9 @@ export default function BlogDetailsPage() {
   const [showComments, setShowComments] = useState(true);
   const [refreshingComments, setRefreshingComments] = useState(false);
 
+  // Check if user is authenticated
+  const isAuthenticated = Boolean(token && user);
+
   // Ensure we're on the client side
   useEffect(() => {
     setIsClient(true);
@@ -570,7 +573,7 @@ export default function BlogDetailsPage() {
             </p>
             <Link
               href="/blog"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-300"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-300"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Blog
@@ -632,7 +635,7 @@ export default function BlogDetailsPage() {
                   </div>
                 )}
 
-                <div className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
+                <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
                   {article.category}
                 </div>
               </div>
@@ -674,7 +677,7 @@ export default function BlogDetailsPage() {
                   <p className="text-xs sm:text-sm text-gray-400">Comments</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-lg sm:text-2xl font-bold text-pink-400">
+                  <p className="text-lg sm:text-2xl font-bold text-purple-400">
                     {article.views}
                   </p>
                   <p className="text-xs sm:text-sm text-gray-400">Views</p>
@@ -694,7 +697,7 @@ export default function BlogDetailsPage() {
 
                 <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
                   <div className="flex items-center gap-3">
-                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-pink-400" />
+                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400" />
                     <div>
                       <p className="text-xs sm:text-sm text-gray-400">
                         Published
@@ -706,7 +709,7 @@ export default function BlogDetailsPage() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-pink-400" />
+                    <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400" />
                     <div>
                       <p className="text-xs sm:text-sm text-gray-400">
                         Read Time
@@ -718,7 +721,7 @@ export default function BlogDetailsPage() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <User className="h-4 w-4 sm:h-5 sm:w-5 text-pink-400" />
+                    <User className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400" />
                     <div>
                       <p className="text-xs sm:text-sm text-gray-400">Author</p>
                       <p className="text-sm sm:text-base text-white font-medium">
@@ -731,7 +734,7 @@ export default function BlogDetailsPage() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-pink-400" />
+                    <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400" />
                     <div>
                       <p className="text-xs sm:text-sm text-gray-400">Views</p>
                       <p className="text-sm sm:text-base text-white font-medium">
@@ -772,7 +775,7 @@ export default function BlogDetailsPage() {
                       {article.tags.map((tag) => (
                         <span
                           key={tag}
-                          className="px-2 sm:px-3 py-1 bg-gradient-to-r from-pink-500/20 to-purple-600/20 border border-pink-500/30 text-pink-300 rounded-full text-xs sm:text-sm"
+                          className="px-2 sm:px-3 py-1 bg-gradient-to-r from-purple-500/20 to-purple-600/20 border border-purple-500/30 text-purple-300 rounded-full text-xs sm:text-sm"
                         >
                           #{tag}
                         </span>
@@ -832,12 +835,29 @@ export default function BlogDetailsPage() {
                     </button>
                     <button
                       onClick={() => setShowComments(!showComments)}
-                      className="text-sm text-pink-400 hover:text-pink-300 transition-colors"
+                      className="text-sm text-purple-400 hover:text-purple-300 transition-colors"
                     >
                       {showComments ? "Hide" : "Show"} Comments
                     </button>
                   </div>
                 </div>
+
+                {/* Authentication notice for unauthenticated users */}
+                {!isAuthenticated && (
+                  <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                    <p className="text-blue-300 text-sm flex items-center gap-2">
+                      <MessageCircle className="h-4 w-4" />
+                      You can read all comments, but you'll need to{" "}
+                      <button
+                        onClick={() => router.push("/auth/signin")}
+                        className="text-blue-400 hover:text-blue-300 underline font-medium cursor-pointer"
+                      >
+                        sign in
+                      </button>{" "}
+                      to post comments or replies.
+                    </p>
+                  </div>
+                )}
 
                 <AnimatePresence>
                   {showComments && (
@@ -848,29 +868,60 @@ export default function BlogDetailsPage() {
                       className="space-y-4 sm:space-y-6"
                     >
                       {/* Comment Form */}
-                      <div className="space-y-3 sm:space-y-4">
-                        <textarea
-                          value={commentText}
-                          onChange={(e) => setCommentText(e.target.value)}
-                          placeholder="Share your thoughts about this article..."
-                          rows={3}
-                          className="w-full p-3 sm:p-4 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white placeholder-gray-400 resize-none focus:outline-none focus:border-pink-500/50 text-sm sm:text-base"
-                        />
-                        <div className="flex justify-end">
-                          <button
-                            onClick={handleSubmitComment}
-                            disabled={!commentText.trim() || submittingComment}
-                            className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base"
-                          >
-                            {submittingComment ? (
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                            ) : (
-                              <Send className="h-4 w-4" />
-                            )}
-                            Post Comment
-                          </button>
+                      {isAuthenticated ? (
+                        <div className="space-y-3 sm:space-y-4">
+                          <textarea
+                            value={commentText}
+                            onChange={(e) => setCommentText(e.target.value)}
+                            placeholder="Share your thoughts about this article..."
+                            rows={3}
+                            className="w-full p-3 sm:p-4 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white placeholder-gray-400 resize-none focus:outline-none focus:border-purple-500/50 text-sm sm:text-base"
+                          />
+                          <div className="flex justify-end">
+                            <button
+                              onClick={handleSubmitComment}
+                              disabled={
+                                !commentText.trim() || submittingComment
+                              }
+                              className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base"
+                            >
+                              {submittingComment ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                              ) : (
+                                <Send className="h-4 w-4" />
+                              )}
+                              Post Comment
+                            </button>
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-4 sm:p-6 text-center">
+                          <div className="flex flex-col items-center gap-3">
+                            <MessageCircle className="h-8 w-8 text-gray-400" />
+                            <h4 className="text-white font-medium">
+                              Join the Conversation
+                            </h4>
+                            <p className="text-gray-400 text-sm sm:text-base">
+                              Sign in to share your thoughts and engage with
+                              other readers.
+                            </p>
+                            <div className="flex gap-2 mt-2">
+                              <button
+                                onClick={() => router.push("/auth/signin")}
+                                className="px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-300 text-sm"
+                              >
+                                Sign In
+                              </button>
+                              <button
+                                onClick={() => router.push("/auth/signup")}
+                                className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-lg transition-all duration-300 text-sm"
+                              >
+                                Sign Up
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Comments List */}
                       {comments.length > 0 ? (
@@ -881,7 +932,7 @@ export default function BlogDetailsPage() {
                               className="bg-white/5 rounded-lg sm:rounded-xl p-3 sm:p-4"
                             >
                               <div className="flex items-start gap-3">
-                                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium text-sm sm:text-base">
+                                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium text-sm sm:text-base">
                                   {comment.userName?.charAt(0).toUpperCase() ||
                                     (refreshingComments ? "..." : "?")}
                                 </div>
@@ -909,19 +960,32 @@ export default function BlogDetailsPage() {
                                   </p>
 
                                   <div className="flex items-center justify-between">
-                                    <button
-                                      onClick={() =>
-                                        setReplyingTo(
-                                          replyingTo === comment._id
-                                            ? null
-                                            : comment._id
-                                        )
-                                      }
-                                      className="text-xs sm:text-sm text-pink-400 hover:text-pink-300 transition-colors flex items-center gap-1"
-                                    >
-                                      <Reply className="h-3 w-3" />
-                                      Reply
-                                    </button>
+                                    {isAuthenticated ? (
+                                      <button
+                                        onClick={() =>
+                                          setReplyingTo(
+                                            replyingTo === comment._id
+                                              ? null
+                                              : comment._id
+                                          )
+                                        }
+                                        className="text-xs sm:text-sm text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1"
+                                      >
+                                        <Reply className="h-3 w-3" />
+                                        Reply
+                                      </button>
+                                    ) : (
+                                      <button
+                                        onClick={() =>
+                                          router.push("/auth/signin")
+                                        }
+                                        className="text-xs sm:text-sm text-gray-400 hover:text-purple-300 transition-colors flex items-center gap-1"
+                                        title="Sign in to reply"
+                                      >
+                                        <Reply className="h-3 w-3" />
+                                        Sign in to Reply
+                                      </button>
+                                    )}
 
                                     {/* Delete button - only show if user is the comment author */}
                                     {user && comment.user === user._id && (
@@ -939,41 +1003,47 @@ export default function BlogDetailsPage() {
 
                                   {/* Reply Form */}
                                   <AnimatePresence>
-                                    {replyingTo === comment._id && (
-                                      <motion.div
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: "auto" }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        className="mt-3 space-y-3"
-                                      >
-                                        <textarea
-                                          value={replyText}
-                                          onChange={(e) =>
-                                            setReplyText(e.target.value)
-                                          }
-                                          placeholder="Write a reply..."
-                                          rows={2}
-                                          className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 resize-none focus:outline-none focus:border-pink-500/50 text-sm"
-                                        />
-                                        <div className="flex justify-end gap-2">
-                                          <button
-                                            onClick={() => setReplyingTo(null)}
-                                            className="px-3 py-1 text-gray-400 hover:text-white transition-colors text-sm"
-                                          >
-                                            Cancel
-                                          </button>
-                                          <button
-                                            onClick={() =>
-                                              handleSubmitReply(comment._id)
+                                    {replyingTo === comment._id &&
+                                      isAuthenticated && (
+                                        <motion.div
+                                          initial={{ opacity: 0, height: 0 }}
+                                          animate={{
+                                            opacity: 1,
+                                            height: "auto",
+                                          }}
+                                          exit={{ opacity: 0, height: 0 }}
+                                          className="mt-3 space-y-3"
+                                        >
+                                          <textarea
+                                            value={replyText}
+                                            onChange={(e) =>
+                                              setReplyText(e.target.value)
                                             }
-                                            disabled={!replyText.trim()}
-                                            className="px-4 py-1 bg-pink-500 text-white rounded text-sm hover:bg-pink-600 transition-colors disabled:opacity-50"
-                                          >
-                                            Reply
-                                          </button>
-                                        </div>
-                                      </motion.div>
-                                    )}
+                                            placeholder="Write a reply..."
+                                            rows={2}
+                                            className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 resize-none focus:outline-none focus:border-purple-500/50 text-sm"
+                                          />
+                                          <div className="flex justify-end gap-2">
+                                            <button
+                                              onClick={() =>
+                                                setReplyingTo(null)
+                                              }
+                                              className="px-3 py-1 text-gray-400 hover:text-white transition-colors text-sm"
+                                            >
+                                              Cancel
+                                            </button>
+                                            <button
+                                              onClick={() =>
+                                                handleSubmitReply(comment._id)
+                                              }
+                                              disabled={!replyText.trim()}
+                                              className="px-4 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600 transition-colors disabled:opacity-50"
+                                            >
+                                              Reply
+                                            </button>
+                                          </div>
+                                        </motion.div>
+                                      )}
                                   </AnimatePresence>
 
                                   {/* Replies */}
@@ -986,7 +1056,7 @@ export default function BlogDetailsPage() {
                                             className="bg-white/5 rounded-lg p-3"
                                           >
                                             <div className="flex items-start gap-3">
-                                              <div className="w-6 h-6 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium text-xs">
+                                              <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium text-xs">
                                                 {reply.userName
                                                   ?.charAt(0)
                                                   .toUpperCase() ||
@@ -1011,6 +1081,22 @@ export default function BlogDetailsPage() {
                                                         : "Unknown date"}
                                                     </span>
                                                   </div>
+
+                                                  {/* Delete button for replies - only show if user is the reply author */}
+                                                  {user &&
+                                                    reply.user === user._id && (
+                                                      <button
+                                                        onClick={() =>
+                                                          handleDeleteReply(
+                                                            comment._id,
+                                                            reply._id
+                                                          )
+                                                        }
+                                                        className="text-xs text-red-400 hover:text-red-300 transition-colors flex items-center gap-1"
+                                                      >
+                                                        <Trash2 className="h-3 w-3" />
+                                                      </button>
+                                                    )}
                                                 </div>
                                                 <p className="text-gray-300 text-sm">
                                                   {reply.content ||
@@ -1057,20 +1143,50 @@ export default function BlogDetailsPage() {
                   Article Actions
                 </h3>
 
+                {/* Authentication notice for unauthenticated users */}
+                {!isAuthenticated && (
+                  <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                    <p className="text-amber-300 text-xs sm:text-sm">
+                      💡 You can share this article freely, but liking requires{" "}
+                      <button
+                        onClick={() => router.push("/auth/signin")}
+                        className="text-amber-400 hover:text-amber-300 underline font-medium"
+                      >
+                        signing in
+                      </button>
+                      .
+                    </p>
+                  </div>
+                )}
+
                 <div className="space-y-3 sm:space-y-4">
                   {/* Like Button */}
                   <button
-                    onClick={handleLikeArticle}
+                    onClick={
+                      isAuthenticated
+                        ? handleLikeArticle
+                        : () => router.push("/auth/signin")
+                    }
+                    disabled={!isAuthenticated && !isLiked}
                     className={`w-full py-2 sm:py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base ${
                       isLiked
                         ? "bg-red-600 text-white"
-                        : "bg-white/10 hover:bg-white/20 text-white border border-white/20"
+                        : isAuthenticated
+                        ? "bg-white/10 hover:bg-white/20 text-white border border-white/20"
+                        : "bg-gray-600/50 text-gray-300 border border-gray-600/50 cursor-pointer hover:bg-gray-600/70"
                     }`}
+                    title={
+                      !isAuthenticated ? "Sign in to like this article" : ""
+                    }
                   >
                     <Heart
                       className={`h-4 w-4 ${isLiked ? "fill-current" : ""}`}
                     />
-                    {isLiked ? "Liked" : "Like Article"}
+                    {isLiked
+                      ? "Liked"
+                      : isAuthenticated
+                      ? "Like Article"
+                      : "Sign in to Like"}
                   </button>
 
                   {/* Copy URL Button */}
@@ -1131,7 +1247,7 @@ export default function BlogDetailsPage() {
                 </h3>
 
                 <div className="flex items-start gap-3 sm:gap-4">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg sm:text-xl">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg sm:text-xl">
                     {article.author.charAt(0)}
                   </div>
                   <div className="flex-1">

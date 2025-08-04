@@ -195,7 +195,7 @@ export function HeroSearch() {
         <div className="max-w-4xl mx-auto">
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 animate-fade-in-up">
             Discover{" "}
-            <span className="bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-purple-600 to-purple-200 bg-clip-text text-transparent">
               Amazing Events
             </span>
           </h1>
@@ -221,11 +221,11 @@ export function HeroSearch() {
                   onChange={(e) => setQuery(e.target.value)}
                   onFocus={() => setIsOpen(true)}
                   placeholder="Search for events, categories, or locations..."
-                  className="w-full pl-12 sm:pl-16 pr-12 sm:pr-16 py-4 text-base sm:text-lg rounded-xl sm:rounded-2xl border-2 border-gray-600 bg-transparent backdrop-blur-xs text-white placeholder:text-gray-300 focus:outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/20 transition-all duration-300 shadow-xl"
+                  className="w-full pl-12 sm:pl-16 pr-12 sm:pr-16 py-4 text-base sm:text-lg rounded-xl sm:rounded-2xl border-2 border-gray-600 bg-transparent backdrop-blur-xs text-white placeholder:text-gray-300 focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 transition-all duration-300 shadow-xl"
                 />
                 {isLoading && (
                   <div className="absolute right-4 sm:right-6 top-1/2 transform -translate-y-1/2">
-                    <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-b-2 border-pink-500"></div>
+                    <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-b-2 border-purple-500"></div>
                   </div>
                 )}
                 {!isLoading && query && (
@@ -241,7 +241,7 @@ export function HeroSearch() {
                 {!isLoading && query && (
                   <button
                     type="submit"
-                    className="absolute right-2 sm:hidden top-1/2 transform -translate-y-1/2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg px-3 py-1 text-xs font-medium transition-colors shadow-lg"
+                    className="absolute right-2 sm:hidden top-1/2 transform -translate-y-1/2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg px-3 py-1 text-xs font-medium transition-colors shadow-lg"
                   >
                     Go
                   </button>
@@ -288,7 +288,7 @@ export function HeroSearch() {
                         </h3>
                         <button
                           onClick={clearRecentSearches}
-                          className="text-xs text-pink-400 hover:text-pink-300 transition-colors bg-white/10 hover:bg-white/20 px-3 py-1 rounded-full border border-pink-400/30"
+                          className="text-xs text-purple-400 hover:text-purple-300 transition-colors bg-white/10 hover:bg-white/20 px-3 py-1 rounded-full border border-purple-400/30"
                         >
                           Clear All
                         </button>

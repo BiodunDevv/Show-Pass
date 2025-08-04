@@ -5,91 +5,80 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  Eye,
-  EyeOff,
   Mail,
-  Lock,
   Ticket,
   ArrowRight,
-  ChevronLeft,
-  ChevronRight,
+  ArrowLeft,
+  CheckCircle,
+  Clock,
+  RefreshCw,
+  AlertCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 
 const heroImages = [
   {
-    url: "https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=800&h=600&fit=crop",
-    title: "Discover Amazing Events",
-    description: "Join thousands of events happening near you",
+    url: "https://images.unsplash.com/photo-1596526131083-e8c633c948d2?w=800&h=600&fit=crop",
+    title: "Almost There!",
+    description: "Just one more step to join the ShowPass community",
   },
   {
-    url: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=600&fit=crop",
-    title: "Concert Experiences",
-    description: "Live music and unforgettable moments",
+    url: "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&h=600&fit=crop",
+    title: "Secure Verification",
+    description: "We protect your account with email verification",
   },
   {
-    url: "https://images.unsplash.com/photo-1559223607-a43c990c692c?w=800&h=600&fit=crop",
-    title: "Business Networking",
-    description: "Connect with professionals and grow your network",
-  },
-  {
-    url: "https://images.unsplash.com/photo-1698581075105-924b6c70b5d6?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NDR8fHRlY2glMjBjb25mZXJlbmNlc3xlbnwwfDJ8MHx8fDA%3D",
-    title: "Tech Conferences",
-    description: "Stay ahead with the latest technology trends",
-  },
-  {
-    url: "https://plus.unsplash.com/premium_photo-1720012323027-e0672c82bf09?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzN8fEN1bHR1cmFsJTIwZmVzdGl2YWxzfGVufDB8MnwwfHx8MA%3D%3D",
-    title: "Cultural Festivals",
-    description: "Celebrate diversity and rich cultural heritage",
+    url: "https://images.unsplash.com/photo-1555981815-af7a70ec1d20?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTl8fGdldCUyMHN0YXJ0ZWR8ZW58MHwyfDB8fHww",
+    title: "Get Started",
+    description: "Create amazing events after verification",
   },
 ];
 
-export default function SignInPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+export default function VerifyEmailPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const { login, isLoading, error, setError } = useAuthStore();
+  const [resendCount, setResendCount] = useState(0);
+  const [cooldownTime, setCooldownTime] = useState(0);
+
+  const { resendVerification, user, isLoading, error, setError } =
+    useAuthStore();
   const router = useRouter();
 
   // Auto-slide images
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
-    }, 5000);
+    }, 4000);
     return () => clearInterval(timer);
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Cooldown timer
+  useEffect(() => {
+    if (cooldownTime > 0) {
+      const timer = setTimeout(() => setCooldownTime(cooldownTime - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [cooldownTime]);
+
+  const handleResendEmail = async () => {
     setError(null);
 
-    if (!email || !password) {
-      setError("Please fill in all fields");
+    if (!user?.email) {
+      setError("No email address found. Please sign up again.");
       return;
     }
 
     try {
-      await login(email, password);
-      router.push("/");
-    } catch (error: any) {
-      console.error("Login failed:", error);
-
-      // Check if it's a 403 error (email verification required)
-      if (
-        error.message?.includes("403") ||
-        error.message?.toLowerCase().includes("verification") ||
-        error.message?.toLowerCase().includes("verify")
-      ) {
-        // Redirect to verify page with email
-        router.push(`/auth/verify?email=${encodeURIComponent(email)}`);
-        return;
-      }
-
-      // Error is already set in the store for other errors
+      await resendVerification(user.email);
+      setResendCount((prev) => prev + 1);
+      setCooldownTime(60); // 60 second cooldown
+    } catch (error) {
+      console.error("Failed to resend email:", error);
+      // Error is already set in the store
     }
   };
+
+  const canResend = cooldownTime === 0 && resendCount < 3;
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
@@ -153,7 +142,7 @@ export default function SignInPage() {
         `}</style>
 
         <div className="w-full max-w-md mx-auto slide-in-left">
-          {/* Back to Home Button - Positioned at top */}
+          {/* Back to ShowPass Button */}
           <div className="mb-6 fade-in-up">
             <Link
               href="/"
@@ -166,7 +155,7 @@ export default function SignInPage() {
 
           <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 shadow-2xl rounded-lg">
             <div className="p-6">
-              {/* Logo - Inside the card */}
+              {/* Logo */}
               <div className="flex justify-center mb-6 fade-in-up">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
@@ -178,111 +167,107 @@ export default function SignInPage() {
                 </div>
               </div>
 
-              <div className="fade-in-down">
-                <h1 className="text-2xl font-bold text-white mb-2 text-center">
-                  Welcome Back
+              <div className="fade-in-down text-center">
+                <h1 className="text-2xl font-bold text-white mb-4">
+                  Check Your Email
                 </h1>
-                <p className="text-gray-400 mb-6 text-center">
-                  Sign in to your ShowPass account
+                <p className="text-gray-400 mb-6">
+                  We've sent a verification link to your email address. Click
+                  the link in the email to verify your account and get started.
                 </p>
 
                 {error && (
-                  <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-4 fade-in-up">
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-6 fade-in-up">
                     <p className="text-red-400 text-sm text-center">{error}</p>
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="email"
-                      className="text-xs font-medium text-gray-300 block"
-                    >
-                      Email Address
-                    </label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                      <input
-                        id="email"
-                        type="email"
-                        placeholder="Enter your email"
-                        value={email}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                          setEmail(e.target.value)
-                        }
-                        className="w-full pl-9 h-10 bg-slate-700/50 border border-slate-600 text-white placeholder:text-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm focus:outline-none"
-                        required
-                      />
+                {/* Status Messages */}
+                <div className="space-y-4 mb-6">
+                  <div className="flex items-center gap-3 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                    <Clock className="h-5 w-5 text-blue-400 flex-shrink-0" />
+                    <div className="text-left">
+                      <p className="text-blue-400 font-medium">Email Sent</p>
+                      <p className="text-gray-400 text-sm">
+                        Check your inbox and spam folder
+                      </p>
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="password"
-                      className="text-xs font-medium text-gray-300 block"
-                    >
-                      Password
-                    </label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                      <input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Enter your password"
-                        value={password}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                          setPassword(e.target.value)
-                        }
-                        className="w-full pl-9 pr-10 h-10 bg-slate-700/50 border border-slate-600 text-white placeholder:text-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm focus:outline-none"
-                        required
-                      />
-                      <button
-                        type="button"
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-slate-600 rounded transition-colors duration-200"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-3 w-3 text-gray-400" />
-                        ) : (
-                          <Eye className="h-3 w-3 text-gray-400" />
-                        )}
-                      </button>
+                  {resendCount > 0 && (
+                    <div className="flex items-center gap-3 p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+                      <CheckCircle className="h-5 w-5 text-green-400 flex-shrink-0" />
+                      <div className="text-left">
+                        <p className="text-green-400 font-medium">
+                          Email Resent
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                          Check your inbox again
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  <div className="flex items-center justify-end">
-                    <Link
-                      href="/auth/forgot-password"
-                      className="text-xs text-purple-400 hover:text-purple-300 font-medium"
-                    >
-                      Forgot password?
-                    </Link>
-                  </div>
+                  {resendCount >= 3 && (
+                    <div className="flex items-center gap-3 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+                      <AlertCircle className="h-5 w-5 text-yellow-400 flex-shrink-0" />
+                      <div className="text-left">
+                        <p className="text-yellow-400 font-medium">
+                          Maximum Attempts Reached
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                          Please contact support if you need help
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
+                {/* Action Buttons */}
+                <div className="space-y-4">
                   <button
-                    type="submit"
-                    className="w-full h-10 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={isLoading}
+                    onClick={handleResendEmail}
+                    disabled={!canResend || isLoading}
+                    className="w-full h-10 text-white border border-slate-600 hover:bg-slate-700 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   >
                     {isLoading ? (
-                      <span className="text-sm">Signing in...</span>
+                      <span className="flex items-center gap-2 text-sm">
+                        <div className="w-4 h-4 border-2 border-gray-400/20 border-t-gray-400 rounded-full animate-spin" />
+                        Resending...
+                      </span>
+                    ) : cooldownTime > 0 ? (
+                      <span className="flex items-center gap-2 text-sm">
+                        <Clock className="h-4 w-4" />
+                        Resend in {cooldownTime}s
+                      </span>
                     ) : (
-                      <span className="flex items-center gap-2 text-sm justify-center">
-                        Sign In
-                        <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      <span className="flex items-center gap-2 text-sm">
+                        <RefreshCw className="h-4 w-4" />
+                        Resend Verification Email
                       </span>
                     )}
                   </button>
-                </form>
 
-                <div className="mt-6 text-center">
+                  <Link
+                    href="/"
+                    className="w-full h-10 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group flex items-center justify-center"
+                  >
+                    <span className="flex items-center gap-2 text-sm">
+                      Continue to Home
+                      <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </span>
+                  </Link>
+                </div>
+
+                {/* Help Text */}
+                <div className="mt-6 pt-4 border-t border-slate-700">
                   <p className="text-xs text-gray-400">
-                    Don't have an account?{" "}
+                    Didn't receive the email? Check your spam folder or{" "}
                     <Link
-                      href="/auth/signup"
-                      className="text-purple-400 hover:text-purple-300 font-semibold"
+                      href="/contact"
+                      className="text-purple-400 hover:text-purple-300"
                     >
-                      Sign up
+                      contact support
                     </Link>
                   </p>
                 </div>
@@ -339,13 +324,13 @@ export default function SignInPage() {
           onClick={prevImage}
           className="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/20 transition-all duration-300 hover:scale-110"
         >
-          <ChevronLeft className="h-6 w-6 text-white" />
+          <ArrowLeft className="h-6 w-6 text-white" />
         </button>
         <button
           onClick={nextImage}
           className="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/20 transition-all duration-300 hover:scale-110"
         >
-          <ChevronRight className="h-6 w-6 text-white" />
+          <ArrowRight className="h-6 w-6 text-white" />
         </button>
 
         {/* Slide Indicators */}

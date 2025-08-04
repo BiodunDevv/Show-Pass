@@ -106,7 +106,7 @@ export default function EventCheckInPage() {
   if (isLoading && !currentEvent) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
       </div>
     );
   }
@@ -153,7 +153,7 @@ export default function EventCheckInPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowQRScanner(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors"
               >
                 <Camera className="h-4 w-4" />
                 Scan QR
@@ -215,7 +215,7 @@ export default function EventCheckInPage() {
                 placeholder="Search by name, email, or booking reference..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                className="w-full pl-10 pr-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
             </div>
 
@@ -223,7 +223,7 @@ export default function EventCheckInPage() {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value as any)}
-                className="px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
+                className="px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
                 <option value="all">All Attendees</option>
                 <option value="checked-in">Checked In</option>
@@ -330,7 +330,7 @@ export default function EventCheckInPage() {
                       </span>
                     </td>
                     <td className="px-4 py-4">
-                      <code className="text-pink-400 text-sm">
+                      <code className="text-purple-400 text-sm">
                         {attendee.bookingReference}
                       </code>
                     </td>
@@ -360,7 +360,7 @@ export default function EventCheckInPage() {
                         <button
                           onClick={() => handleManualCheckIn(attendee._id)}
                           disabled={isLoading}
-                          className="px-3 py-1 bg-pink-500 hover:bg-pink-600 disabled:bg-gray-600 text-white text-sm rounded transition-colors"
+                          className="px-3 py-1 bg-purple-500 hover:bg-purple-600 disabled:bg-gray-600 text-white text-sm rounded transition-colors"
                         >
                           Check In
                         </button>

@@ -80,6 +80,7 @@ interface ArticleState {
 
   // Public actions (no auth required)
   fetchArticles: (filters?: ArticleFilters) => Promise<ArticlesResponse>;
+  loadMoreArticles: (filters?: ArticleFilters) => Promise<ArticlesResponse>;
   fetchFeaturedArticles: (limit?: number) => Promise<void>;
   fetchArticleById: (id: string) => Promise<Article>;
   fetchArticleBySlug: (slug: string) => Promise<Article>;
@@ -154,6 +155,46 @@ export const useArticleStore = create<ArticleState>()(
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : "Failed to fetch articles";
+          set({ error: errorMessage, isLoading: false });
+          throw error;
+        }
+      },
+
+      loadMoreArticles: async (filters?: ArticleFilters) => {
+        set({ isLoading: true, error: null });
+
+        try {
+          const queryParams = new URLSearchParams();
+          const currentFilters = { ...get().filters, ...filters };
+
+          Object.entries(currentFilters).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+              queryParams.append(key, value.toString());
+            }
+          });
+
+          const data: ArticlesResponse = await apiRequest(
+            `${
+              API_CONFIG.ENDPOINTS.ARTICLES.GET_ALL
+            }?${queryParams.toString()}`,
+            {
+              method: "GET",
+            }
+          );
+
+          set((state) => ({
+            articles: [...state.articles, ...data.data],
+            filters: currentFilters,
+            isLoading: false,
+            error: null,
+          }));
+
+          return data;
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : "Failed to load more articles";
           set({ error: errorMessage, isLoading: false });
           throw error;
         }
