@@ -5,7 +5,6 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  Mail,
   Ticket,
   ArrowRight,
   ArrowLeft,
@@ -42,7 +41,6 @@ export default function VerifyEmailPage() {
 
   const { resendVerification, user, isLoading, error, setError } =
     useAuthStore();
-  const router = useRouter();
 
   // Auto-slide images
   useEffect(() => {
@@ -172,7 +170,7 @@ export default function VerifyEmailPage() {
                   Check Your Email
                 </h1>
                 <p className="text-gray-400 mb-6">
-                  We've sent a verification link to your email address. Click
+                  We&apos;ve sent a verification link to your email address. Click
                   the link in the email to verify your account and get started.
                 </p>
 
@@ -262,7 +260,7 @@ export default function VerifyEmailPage() {
                 {/* Help Text */}
                 <div className="mt-6 pt-4 border-t border-slate-700">
                   <p className="text-xs text-gray-400">
-                    Didn't receive the email? Check your spam folder or{" "}
+                    Didn&apos;t receive the email? Check your spam folder or{" "}
                     <Link
                       href="/contact"
                       className="text-purple-400 hover:text-purple-300"

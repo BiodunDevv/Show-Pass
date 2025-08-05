@@ -44,8 +44,12 @@ export const API_CONFIG = {
       ADD_REPLY: "/api/articles",
     },
     BOOKINGS: {
-      CHECK_IN: "/api/bookings",
-      VERIFY_QR: "/api/bookings/verify-qr",
+      CREATE: "/api/booking",
+      FREE_EVENT: "/api/booking/free-event",
+      CHECK_IN: "/api/booking",
+      VERIFY_QR: "/api/booking/verify-qr",
+      GET_MY_TICKETS: "/api/booking/my-tickets",
+      GET_BY_ID: "/api/booking",
     },
   },
 } as const;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -10,7 +10,6 @@ import {
   Ticket,
   ArrowRight,
   Loader2,
-  AlertTriangle,
   Send,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -18,7 +17,7 @@ import Image from "next/image";
 
 type VerificationStatus = "initial" | "loading" | "success" | "error";
 
-export default function VerifyPage() {
+function VerifyPageContent() {
   const [status, setStatus] = useState<VerificationStatus>("initial");
   const [countdown, setCountdown] = useState(5);
   const [verificationCode, setVerificationCode] = useState("");
@@ -49,7 +48,7 @@ export default function VerifyPage() {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [images.length]);
 
   const handleVerification = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +78,7 @@ export default function VerifyPage() {
 
       // Cleanup timer after 5 seconds
       setTimeout(() => clearInterval(timer), 5000);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Email verification failed:", error);
       setStatus("error");
     }
@@ -235,7 +234,7 @@ export default function VerifyPage() {
                     {/* Resend Code Button */}
                     <div className="text-center pt-4">
                       <p className="text-sm text-gray-400 mb-2">
-                        Didn't receive the code?
+                        Didn&apos;t receive the code?
                       </p>
                       <button
                         type="button"
@@ -269,7 +268,7 @@ export default function VerifyPage() {
                   <div className="space-y-6">
                     <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
                       <p className="text-green-400 font-medium mb-2">
-                        What's Next?
+                        What&apos;s Next?
                       </p>
                       <ul className="text-sm text-gray-400 space-y-1 text-left">
                         <li>• Complete your profile setup</li>
@@ -388,5 +387,48 @@ export default function VerifyPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Loading component for Suspense fallback
+function VerifyPageLoading() {
+  return (
+    <div className="h-screen bg-slate-900 flex overflow-hidden">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center p-8 h-screen overflow-y-auto">
+        <div className="w-full max-w-md mx-auto">
+          <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 shadow-2xl rounded-lg">
+            <div className="p-6">
+              <div className="flex justify-center mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <Ticket className="h-6 w-6 text-white" />
+                  </div>
+                  <span className="text-2xl font-bold text-white">
+                    ShowPass
+                  </span>
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="animate-pulse space-y-4">
+                  <div className="h-8 bg-slate-700 rounded w-3/4 mx-auto"></div>
+                  <div className="h-4 bg-slate-700 rounded w-1/2 mx-auto"></div>
+                  <div className="h-12 bg-slate-700 rounded"></div>
+                  <div className="h-12 bg-slate-700 rounded"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden bg-slate-800"></div>
+    </div>
+  );
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={<VerifyPageLoading />}>
+      <VerifyPageContent />
+    </Suspense>
   );
 }

@@ -40,7 +40,6 @@ export default function ForgotPasswordPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const { forgotPassword, isLoading, error } = useAuthStore();
-  const router = useRouter();
 
   // Auto-rotate hero images
   useEffect(() => {
@@ -87,11 +86,11 @@ export default function ForgotPasswordPage() {
                   Check Your Email
                 </h1>
                 <p className="text-gray-300 mb-6">
-                  We've sent a password reset link to{" "}
+                  We&apos;ve sent a password reset link to{" "}
                   <span className="text-purple-400 font-medium">{email}</span>
                 </p>
                 <p className="text-sm text-gray-400 mb-8">
-                  Don't see the email? Check your spam folder or try again.
+                  Don&apos;t see the email? Check your spam folder or try again.
                 </p>
                 <div className="space-y-3">
                   <button
@@ -267,7 +266,7 @@ export default function ForgotPasswordPage() {
                   Forgot Password?
                 </h1>
                 <p className="text-gray-400 mb-6 text-center">
-                  No worries! Enter your email and we'll send you a reset link.
+                  No worries! Enter your email and we&apos;ll send you a reset link.
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">

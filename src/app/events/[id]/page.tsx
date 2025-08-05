@@ -18,14 +18,16 @@ import {
   Share2,
   QrCode,
   Eye,
-  Download,
-  CheckCircle,
   X,
+  CheckCircle,
+  Download,
+  Search,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEventStore } from "@/store/useEventStore";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useBookingStore, type Booking } from "@/store/useBookingStore";
 import { API_CONFIG, apiRequest } from "@/lib/api";
 
 interface EventDetails {
@@ -84,6 +86,7 @@ export default function EventDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const { user, fetchUserProfile, token } = useAuthStore();
+  const { userBookings, fetchUserBookings } = useBookingStore();
   const [event, setEvent] = useState<EventDetails | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [userPurchases, setUserPurchases] = useState<any[]>([]);
@@ -102,8 +105,21 @@ export default function EventDetailsPage() {
     eventTitle: string;
   } | null>(null);
 
+  // Attendees sidebar state
+  const [showAttendeesSidebar, setShowAttendeesSidebar] = useState(false);
+  const [eventAttendees, setEventAttendees] = useState<any[]>([]);
+  const [attendeesLoading, setAttendeesLoading] = useState(false);
+  const [attendeesPage, setAttendeesPage] = useState(1);
+  const [attendeesTotal, setAttendeesTotal] = useState(0);
+  const [attendeesSearch, setAttendeesSearch] = useState("");
+
   // Check if current user is the organizer of this event
   const isEventOrganizer = user && event && user._id === event.organizer._id;
+
+  // Get user's tickets for this specific event
+  const userEventTickets = userBookings.filter(
+    (booking) => booking.event && booking.event._id === params.id
+  );
 
   // Check if user has purchased tickets for this event
   const userEventPurchases = userPurchases.filter(
@@ -139,6 +155,19 @@ export default function EventDetailsPage() {
           if (profileData?.statistics?.userMetrics?.recentBookings) {
             setUserPurchases(profileData.statistics.userMetrics.recentBookings);
           }
+
+          // Fetch user bookings
+          try {
+            await fetchUserBookings();
+          } catch (error) {
+            // Only log error if it's not an authentication issue
+            if (
+              error instanceof Error &&
+              !error.message.includes("Authentication token not found")
+            ) {
+              console.error("Error fetching user bookings:", error);
+            }
+          }
         } catch (error) {
           console.error("Failed to fetch user profile:", error);
         }
@@ -149,7 +178,7 @@ export default function EventDetailsPage() {
       fetchEventDetails();
       fetchUserProfileData();
     }
-  }, [params.id, user, fetchUserProfile]);
+  }, [params.id, user, fetchUserProfile, fetchUserBookings]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -183,24 +212,14 @@ export default function EventDetailsPage() {
       router.push("/auth/signin");
       return;
     }
-    
+
     if (!event) {
       return;
     }
-    
-    // Redirect to booking page with selected ticket
-    if (selectedTicket) {
-      router.push(`/booking/${event._id}?ticket=${selectedTicket}`);
-    } else {
-      router.push(`/booking/${event._id}`);
-    }
-  };
 
-    if (!user) {
-      router.push("/auth/signin");
-      return;
-    }
-    setShowBookingModal(true);
+    // Redirect to booking page
+    router.push(`/booking/${event._id}`);
+  };
 
   const handleCopyEventUrl = async () => {
     try {
@@ -312,6 +331,104 @@ export default function EventDetailsPage() {
       setOrganizerProfile(null);
       setOrganizerProfileLoading(false);
     }, 300);
+  };
+
+  // Fetch event attendees function
+  const fetchEventAttendees = async (page: number = 1, search: string = "") => {
+    if (!token || !event) {
+      return;
+    }
+
+    try {
+      setAttendeesLoading(true);
+
+      const queryParams = new URLSearchParams();
+      queryParams.append("page", page.toString());
+      queryParams.append("limit", "20");
+      if (search.trim()) {
+        queryParams.append("search", search.trim());
+      }
+
+      console.log("Fetching attendees for event ID:", event._id);
+
+      const data = await apiRequest(
+        `${API_CONFIG.ENDPOINTS.EVENTS.GET_ATTENDEES}/${
+          event._id
+        }/attendees?${queryParams.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (data.success) {
+        setEventAttendees(data.data || []);
+        setAttendeesTotal(data.meta?.total || 0);
+        setAttendeesPage(page);
+      } else {
+        console.error("Failed to fetch attendees:", data.message);
+        // Try alternative endpoints
+        try {
+          const alternativeData = await apiRequest(
+            `/api/bookings?eventId=${event._id}&page=${page}&limit=20${
+              search ? `&search=${search}` : ""
+            }`,
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          if (alternativeData.success) {
+            setEventAttendees(alternativeData.data || []);
+            setAttendeesTotal(alternativeData.meta?.total || 0);
+            setAttendeesPage(page);
+          }
+        } catch (altError) {
+          console.error("Alternative attendees endpoint failed:", altError);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch event attendees:", error);
+    } finally {
+      setAttendeesLoading(false);
+    }
+  };
+
+  const openAttendeesSidebar = () => {
+    if (!isEventOrganizer) {
+      alert("Only event organizers can view attendees.");
+      return;
+    }
+
+    setShowAttendeesSidebar(true);
+    if (eventAttendees.length === 0) {
+      fetchEventAttendees(1, attendeesSearch);
+    }
+  };
+
+  const closeAttendeesSidebar = () => {
+    setShowAttendeesSidebar(false);
+    // Reset attendees data after animation completes
+    setTimeout(() => {
+      setEventAttendees([]);
+      setAttendeesPage(1);
+      setAttendeesSearch("");
+    }, 300);
+  };
+
+  const handleAttendeesSearch = (searchTerm: string) => {
+    setAttendeesSearch(searchTerm);
+    setAttendeesPage(1);
+    fetchEventAttendees(1, searchTerm);
+  };
+
+  const handleAttendeesPageChange = (newPage: number) => {
+    fetchEventAttendees(newPage, attendeesSearch);
   };
 
   if (loading) {
@@ -642,73 +759,82 @@ export default function EventDetailsPage() {
                 />
               </div>
             </div>
-          </div>
 
-          {/* Sidebar - Responsive Layout */}
-          <div className="order-1 xl:order-2 space-y-4 sm:space-y-6">
-            {/* User Purchase Status - Show if user has purchased tickets */}
-            {userEventPurchases.length > 0 && (
-              <div className="bg-gradient-to-r from-green-500/10 to-emerald-600/10 backdrop-blur-sm border border-green-500/30 rounded-lg p-4 sm:p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-500 rounded-full flex items-center justify-center">
-                    <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-base sm:text-lg font-bold text-green-400">
-                      You're Going!
-                    </h3>
-                    <p className="text-green-300 text-xs sm:text-sm">
-                      You have {userEventPurchases.length} ticket
-                      {userEventPurchases.length > 1 ? "s" : ""} for this event
-                    </p>
-                  </div>
+            {/* User Tickets Section - Show user's tickets for this event */}
+            {user && userEventTickets.length > 0 && (
+              <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white">
+                    Your Tickets
+                  </h2>
+                  <Link
+                    href="/my-tickets"
+                    className="text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors"
+                  >
+                    View All →
+                  </Link>
                 </div>
 
                 <div className="space-y-3">
-                  {userEventPurchases.map((purchase, index) => (
+                  {userEventTickets.slice(0, 3).map((booking) => (
                     <div
-                      key={purchase._id || index}
-                      className="bg-slate-800/50 rounded-lg p-4 border border-green-500/20"
+                      key={booking._id}
+                      className="bg-gradient-to-r from-purple-500/10 to-purple-600/10 border border-purple-500/30 rounded-lg p-4"
                     >
-                      <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center justify-between mb-3">
                         <div>
-                          <p className="text-white font-medium">
-                            {purchase.ticketType} Ticket
+                          <p className="font-semibold text-white">
+                            {booking.ticketType}
                           </p>
-                          <p className="text-green-400 text-sm">
-                            Quantity: {purchase.quantity}
+                          <p className="text-sm text-gray-400">
+                            Ref: {booking.paymentReference}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-green-400 font-bold">
-                            ₦{purchase.totalAmount?.toLocaleString()}
+                          <p className="text-lg font-bold text-purple-400">
+                            {formatPrice(booking.totalAmount)}
                           </p>
-                          <p className="text-xs text-gray-400">
-                            {purchase.statusDisplay}
-                          </p>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${
+                              booking.paymentStatus === "completed"
+                                ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                                : booking.paymentStatus === "pending"
+                                ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                                : "bg-red-500/20 text-red-400 border border-red-500/30"
+                            }`}
+                          >
+                            {booking.paymentStatus}
+                          </span>
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between pt-2 border-t border-green-500/20">
+                      <div className="flex items-center justify-between">
                         <p className="text-xs text-gray-400">
                           Purchased:{" "}
-                          {new Date(purchase.createdAt).toLocaleDateString()}
+                          {new Date(booking.createdAt).toLocaleDateString()}
                         </p>
                         <div className="flex gap-2">
-                          {purchase.qrCodeImage && (
+                          <Link
+                            href={`/my-tickets/${booking._id}`}
+                            className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded-md flex items-center gap-1 transition-colors"
+                          >
+                            <Eye className="h-3 w-3" />
+                            Details
+                          </Link>
+                          {booking.qrCodeImage && (
                             <button
                               onClick={() => {
                                 setSelectedQRCode({
-                                  image: purchase.qrCodeImage,
-                                  ticketType: purchase.ticketType,
+                                  image: booking.qrCodeImage,
+                                  ticketType: booking.ticketType,
                                   eventTitle: event.title,
                                 });
                                 setShowQRModal(true);
                               }}
-                              className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded-md flex items-center gap-1 transition-colors"
+                              className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-md flex items-center gap-1 transition-colors"
                             >
                               <QrCode className="h-3 w-3" />
-                              QR Code
+                              QR
                             </button>
                           )}
                         </div>
@@ -717,24 +843,23 @@ export default function EventDetailsPage() {
                   ))}
                 </div>
 
-                <div className="mt-4 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-                  <p className="text-green-300 text-sm text-center">
-                    🎉 Event reminder:{" "}
-                    {new Date(event?.startDate || "").toLocaleDateString(
-                      "en-US",
-                      {
-                        weekday: "long",
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      }
-                    )}{" "}
-                    at {event?.startTime}
-                  </p>
-                </div>
+                {userEventTickets.length > 3 && (
+                  <div className="mt-4 text-center">
+                    <Link
+                      href="/my-tickets"
+                      className="text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors"
+                    >
+                      View {userEventTickets.length - 3} more tickets →
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
+          </div>
 
+          {/* Sidebar - Responsive Layout */}
+          <div className="order-1 xl:order-2 space-y-4 sm:space-y-6">
+            {" "}
             {/* Ticket Selection */}
             <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg p-4 sm:p-6">
               <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">
@@ -866,13 +991,10 @@ export default function EventDetailsPage() {
               ) : user ? (
                 <button
                   onClick={handleBooking}
-                  disabled={!selectedTicket}
-                  className="w-full py-4 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105 disabled:hover:scale-100 flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
                 >
                   <Ticket className="h-5 w-5" />
-                  {selectedTicket
-                    ? "Book Selected Ticket"
-                    : "Select a Ticket to Book"}
+                  Book Tickets
                 </button>
               ) : (
                 <div className="space-y-4">
@@ -894,7 +1016,6 @@ export default function EventDetailsPage() {
                 </div>
               )}
             </div>
-
             {/* Organizer Info */}
             <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg p-4 sm:p-6">
               <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">
@@ -981,21 +1102,31 @@ export default function EventDetailsPage() {
                       <span className="hidden sm:inline">Manage Event</span>
                       <span className="sm:hidden">Manage</span>
                     </button>
-                    <button className="py-2 sm:py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors flex items-center justify-center gap-2 text-xs sm:text-sm">
+                    <button
+                      onClick={openAttendeesSidebar}
+                      className="py-2 sm:py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors flex items-center justify-center gap-2 text-xs sm:text-sm"
+                    >
                       <Users className="h-3 w-3 sm:h-4 sm:w-4" />
                       <span className="hidden sm:inline">View Attendees</span>
                       <span className="sm:hidden">Attendees</span>
                     </button>
                   </div>
                 ) : (
-                  <button className="w-full py-2 sm:py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors flex items-center justify-center gap-2 text-xs sm:text-sm">
+                  <button
+                    className="w-full py-2 sm:py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors flex items-center justify-center gap-2 text-xs sm:text-sm"
+                    onClick={() =>
+                      window.open(
+                        `mailto:${event.organizer.email}?subject=Inquiry about ${event.title}&body=Hi ${event.organizer.firstName},%0D%0A%0D%0AI have a question regarding your event "${event.title}".%0D%0A%0D%0AThank you!`,
+                        "_blank"
+                      )
+                    }
+                  >
                     <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4" />
                     Contact Organizer
                   </button>
                 )}
               </div>
             </div>
-
             {/* Event Actions */}
             <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg p-4 sm:p-6">
               <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">
@@ -1133,7 +1264,7 @@ export default function EventDetailsPage() {
         <>
           {/* Backdrop */}
           <div
-            className={`fixed inset-0 bg-transparent backdrop-blur-sm z-40 transition-opacity duration-300 ease-out ${
+            className={`fixed inset-0 bg-transparent backdrop-blur-sm z-[80] transition-opacity duration-300 ease-out ${
               showOrganizerProfile ? "opacity-100" : "opacity-0"
             }`}
             onClick={closeOrganizerProfile}
@@ -1141,7 +1272,7 @@ export default function EventDetailsPage() {
 
           {/* Sidebar */}
           <div
-            className={`fixed top-0 right-0 h-full w-full max-w-md bg-slate-800 z-50 transform transition-all duration-300 ease-out overflow-hidden shadow-2xl ${
+            className={`fixed top-0 right-0 h-full w-full max-w-md bg-slate-800 z-[90] transform transition-all duration-300 ease-out overflow-hidden shadow-2xl ${
               showOrganizerProfile
                 ? "translate-x-0 opacity-100"
                 : "translate-x-full opacity-0"
@@ -1546,6 +1677,258 @@ export default function EventDetailsPage() {
             </div>
           </div>
         </>
+      )}
+
+      {/* Attendees Sidebar */}
+      {showAttendeesSidebar && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] transition-opacity duration-300"
+            onClick={closeAttendeesSidebar}
+          />
+
+          {/* Sidebar */}
+          <div
+            className={`fixed top-0 right-0 h-full w-full sm:w-96 bg-slate-800 z-[80] transform transition-transform duration-300 ease-in-out flex flex-col ${
+              showAttendeesSidebar ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
+            {/* Header */}
+            <div className="flex-shrink-0 p-4 sm:p-6 bg-slate-900 border-b border-slate-700">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-white">
+                  Event Attendees
+                </h2>
+                <button
+                  onClick={closeAttendeesSidebar}
+                  className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-slate-700"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Search Bar */}
+              <div className="mt-4">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search attendees..."
+                    value={attendeesSearch}
+                    onChange={(e) => handleAttendeesSearch(e.target.value)}
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                  />
+                  <Users className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="mt-4 grid grid-cols-3 gap-3">
+                <div className="bg-slate-700/50 rounded-lg p-3 text-center">
+                  <p className="text-lg font-bold text-white">
+                    {attendeesTotal}
+                  </p>
+                  <p className="text-xs text-gray-400">Total</p>
+                </div>
+                <div className="bg-slate-700/50 rounded-lg p-3 text-center">
+                  <p className="text-lg font-bold text-green-400">
+                    {eventAttendees.filter((a) => a.checkedIn).length}
+                  </p>
+                  <p className="text-xs text-gray-400">Checked In</p>
+                </div>
+                <div className="bg-slate-700/50 rounded-lg p-3 text-center">
+                  <p className="text-lg font-bold text-purple-400">
+                    {
+                      eventAttendees.filter(
+                        (a) => a.paymentStatus === "completed"
+                      ).length
+                    }
+                  </p>
+                  <p className="text-xs text-gray-400">Paid</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto min-h-0">
+              {attendeesLoading ? (
+                /* Loading State */
+                <div className="p-4 space-y-4 pb-6">
+                  {[...Array(6)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="bg-slate-700/50 rounded-lg p-4 border border-slate-600 animate-pulse"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-slate-600 rounded-full"></div>
+                        <div className="flex-1">
+                          <div className="h-4 bg-slate-600 rounded w-32 mb-2"></div>
+                          <div className="h-3 bg-slate-600 rounded w-24"></div>
+                        </div>
+                        <div className="h-6 bg-slate-600 rounded w-16"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : eventAttendees.length > 0 ? (
+                /* Attendees List */
+                <div className="p-4 space-y-3 pb-6">
+                  {eventAttendees.map((attendee, index) => (
+                    <div
+                      key={attendee._id || index}
+                      className="bg-slate-700/50 rounded-lg p-4 border border-slate-600 hover:bg-slate-700/70 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        {/* Avatar */}
+                        <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-white font-bold text-sm">
+                            {attendee.attendeeInfo?.[0]?.name?.[0] ||
+                              attendee.user?.firstName?.[0] ||
+                              attendee.name?.[0] ||
+                              "?"}
+                          </span>
+                        </div>
+
+                        {/* Attendee Info */}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-white text-sm truncate">
+                            {attendee.attendeeInfo?.[0]?.name ||
+                              `${attendee.user?.firstName || ""} ${
+                                attendee.user?.lastName || ""
+                              }`.trim() ||
+                              attendee.name ||
+                              "Unknown Attendee"}
+                          </p>
+                          <p className="text-gray-400 text-xs truncate">
+                            {attendee.attendeeInfo?.[0]?.email ||
+                              attendee.user?.email ||
+                              attendee.email ||
+                              "No email"}
+                          </p>
+                          <p className="text-gray-400 text-xs">
+                            {attendee.ticketType || "General"}
+                          </p>
+                        </div>
+
+                        {/* Status */}
+                        <div className="flex flex-col items-end gap-1">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${
+                              attendee.checkedIn
+                                ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                                : "bg-gray-500/20 text-gray-400 border border-gray-500/30"
+                            }`}
+                          >
+                            {attendee.checkedIn ? "Checked In" : "Not Checked"}
+                          </span>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${
+                              attendee.paymentStatus === "completed"
+                                ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                                : attendee.paymentStatus === "pending"
+                                ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                                : "bg-red-500/20 text-red-400 border border-red-500/30"
+                            }`}
+                          >
+                            {attendee.paymentStatus || "Unknown"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Additional Info */}
+                      {attendee.bookingReference && (
+                        <div className="mt-2 pt-2 border-t border-slate-600">
+                          <p className="text-gray-400 text-xs">
+                            Ref: {attendee.bookingReference}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                  {/* Pagination */}
+                  {attendeesTotal > 20 && (
+                    <div className="flex justify-center gap-2 mt-6 pb-4">
+                      <button
+                        onClick={() =>
+                          handleAttendeesPageChange(attendeesPage - 1)
+                        }
+                        disabled={attendeesPage === 1}
+                        className="px-3 py-1 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded transition-colors text-sm"
+                      >
+                        Previous
+                      </button>
+                      <span className="px-3 py-1 bg-slate-800 text-gray-300 rounded text-sm">
+                        Page {attendeesPage} of {Math.ceil(attendeesTotal / 20)}
+                      </span>
+                      <button
+                        onClick={() =>
+                          handleAttendeesPageChange(attendeesPage + 1)
+                        }
+                        disabled={
+                          attendeesPage >= Math.ceil(attendeesTotal / 20)
+                        }
+                        className="px-3 py-1 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded transition-colors text-sm"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Empty State */
+                <div className="p-6 text-center">
+                  <div className="text-gray-400 mb-4">
+                    <Users className="h-12 w-12 mx-auto mb-3" />
+                    <p className="text-lg font-medium">No Attendees Yet</p>
+                    <p className="text-sm">
+                      When people register for your event, they'll appear here.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* QR Code Modal */}
+      {showQRModal && selectedQRCode && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 max-w-md w-full">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-white">Ticket QR Code</h3>
+              <button
+                onClick={() => {
+                  setShowQRModal(false);
+                  setSelectedQRCode(null);
+                }}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="text-center">
+              <div className="bg-white p-4 rounded-lg mb-4 inline-block">
+                <img
+                  src={selectedQRCode.image}
+                  alt="QR Code"
+                  className="w-48 h-48 mx-auto"
+                />
+              </div>
+              <p className="text-white font-medium mb-1">
+                {selectedQRCode.ticketType}
+              </p>
+              <p className="text-gray-400 text-sm mb-4">
+                {selectedQRCode.eventTitle}
+              </p>
+              <p className="text-gray-400 text-xs">
+                Show this QR code at the event entrance for check-in
+              </p>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

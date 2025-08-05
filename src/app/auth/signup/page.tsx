@@ -502,7 +502,7 @@ export default function SignUpPage() {
                       {formData.confirmPassword &&
                         formData.password !== formData.confirmPassword && (
                           <p className="text-red-400 text-xs mt-1">
-                            Passwords don't match
+                            Passwords don&apos;t match
                           </p>
                         )}
                     </div>

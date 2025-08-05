@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,23 +8,16 @@ import {
   Clock,
   User,
   ArrowLeft,
-  Share2,
   Heart,
-  Bookmark,
   Twitter,
   Facebook,
   Linkedin,
   Copy,
-  Tag,
   Eye,
   MessageCircle,
-  ThumbsUp,
   Star,
-  Badge,
-  ExternalLink,
   Check,
   Send,
-  MoreVertical,
   Reply,
   Trash2,
 } from "lucide-react";
@@ -86,7 +80,6 @@ export default function BlogDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isLiked, setIsLiked] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [relatedArticles, setRelatedArticles] = useState<ArticleDetails[]>([]);
@@ -176,6 +169,36 @@ export default function BlogDetailsPage() {
     }
   }, [article, isClient]);
 
+  // Fetch comments in real-time
+  const refetchComments = async () => {
+    if (!article) return;
+
+    try {
+      setRefreshingComments(true);
+      const data = await apiRequest(
+        `${API_CONFIG.ENDPOINTS.ARTICLES.GET_BY_ID}/${article._id}`
+      );
+
+      if (data.success && data.data && data.data.comments) {
+        setComments(data.data.comments);
+        // Also update the article total comments count
+        setArticle((prev) =>
+          prev
+            ? {
+                ...prev,
+                totalComments:
+                  data.data.totalComments || data.data.comments.length,
+              }
+            : null
+        );
+      }
+    } catch (err) {
+      console.error("Failed to refetch comments:", err);
+    } finally {
+      setRefreshingComments(false);
+    }
+  };
+
   // Auto-refresh comments every 2 minutes when the component is active
   useEffect(() => {
     if (!article || !isClient) return;
@@ -185,7 +208,7 @@ export default function BlogDetailsPage() {
     }, 120000); // 2 minutes
 
     return () => clearInterval(interval);
-  }, [article, isClient]);
+  }, [article, isClient, refetchComments]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -288,36 +311,6 @@ export default function BlogDetailsPage() {
       }
     } catch (err) {
       console.error("Failed to like article:", err);
-    }
-  };
-
-  // Fetch comments in real-time
-  const refetchComments = async () => {
-    if (!article) return;
-
-    try {
-      setRefreshingComments(true);
-      const data = await apiRequest(
-        `${API_CONFIG.ENDPOINTS.ARTICLES.GET_BY_ID}/${article._id}`
-      );
-
-      if (data.success && data.data && data.data.comments) {
-        setComments(data.data.comments);
-        // Also update the article total comments count
-        setArticle((prev) =>
-          prev
-            ? {
-                ...prev,
-                totalComments:
-                  data.data.totalComments || data.data.comments.length,
-              }
-            : null
-        );
-      }
-    } catch (err) {
-      console.error("Failed to refetch comments:", err);
-    } finally {
-      setRefreshingComments(false);
     }
   };
 
@@ -847,7 +840,7 @@ export default function BlogDetailsPage() {
                   <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                     <p className="text-blue-300 text-sm flex items-center gap-2">
                       <MessageCircle className="h-4 w-4" />
-                      You can read all comments, but you'll need to{" "}
+                      You can read all comments, but you&apos;ll need to{" "}
                       <button
                         onClick={() => router.push("/auth/signin")}
                         className="text-blue-400 hover:text-blue-300 underline font-medium cursor-pointer"

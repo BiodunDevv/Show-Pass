@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -22,7 +22,7 @@ import {
 import Image from "next/image";
 import { useEventStore } from "@/store/useEventStore";
 
-export default function EventsPage() {
+function EventsPageContent() {
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -31,6 +31,7 @@ export default function EventsPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isEventHovered, setIsEventHovered] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const eventsPerPage = 6;
 
   const {
@@ -130,7 +131,7 @@ export default function EventsPage() {
         category === "Food"
           ? "Food & Drink"
           : category === "Health"
-          ? "Health & Wellness"
+          ? "Health"
           : category,
       icon: categoryIcons[category] || "📅",
       count: 0,
@@ -196,6 +197,23 @@ export default function EventsPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, selectedCategory, selectedTags]);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (
+        !target.closest(".category-dropdown") &&
+        !target.closest(".filter-dropdown")
+      ) {
+        setIsCategoryDropdownOpen(false);
+        setIsFilterMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -391,7 +409,7 @@ export default function EventsPage() {
                 </div>
 
                 {/* Filter button */}
-                <div className="relative sm:flex-shrink-0">
+                <div className="relative sm:flex-shrink-0 filter-dropdown">
                   <motion.button
                     onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
                     className={`flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border transition-all duration-300 w-full sm:w-auto text-sm sm:text-base ${
@@ -465,49 +483,198 @@ export default function EventsPage() {
               </div>
             </motion.div>
 
-            {/* Minimal Category Pills */}
+            {/* Smart Category Display */}
             <motion.div
               className="mt-4 sm:mt-6"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <div className="flex flex-wrap gap-1.5 sm:gap-2 items-center justify-center">
-                {categoriesWithCounts.map((category) => (
-                  <motion.button
-                    key={category.id}
-                    onClick={() => setSelectedCategory(category.id)}
-                    className={`relative flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 ${
-                      selectedCategory === category.id
-                        ? "border border-purple-500 bg-purple-900/30 text-purple-300 shadow-lg shadow-purple-900/20"
-                        : "bg-[#2E313C]/50 text-gray-300 hover:bg-[#2E313C]/80 hover:text-white border border-[#3E4154]/50 hover:border-purple-500/30"
-                    }`}
-                  >
-                    <span
-                      className="text-xs sm:text-sm"
-                      role="img"
-                      aria-label={category.name}
-                    >
-                      {category.icon}
-                    </span>
-                    <span className="hidden sm:inline">{category.name}</span>
-                    <span className="sm:hidden">
-                      {category.name.length > 8
-                        ? category.name.substring(0, 8) + "..."
-                        : category.name}
-                    </span>
-                    <span
-                      className={`text-xs px-1 sm:px-1.5 py-0.5 rounded-full ${
+              {/* Mobile: Horizontal Scroll, Desktop: Grouped with Dropdown */}
+              <div className="block sm:hidden">
+                {/* Mobile Horizontal Scroll */}
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                  {categoriesWithCounts.map((category) => (
+                    <motion.button
+                      key={category.id}
+                      onClick={() => setSelectedCategory(category.id)}
+                      className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 whitespace-nowrap ${
                         selectedCategory === category.id
-                          ? "bg-white/20 text-white/80"
-                          : "bg-gray-600/30 text-gray-400"
+                          ? "border border-purple-500 bg-purple-900/30 text-purple-300 shadow-lg shadow-purple-900/20"
+                          : "bg-[#2E313C]/50 text-gray-300 hover:bg-[#2E313C]/80 hover:text-white border border-[#3E4154]/50"
                       }`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                     >
-                      {category.count}
-                    </span>
-                  </motion.button>
-                ))}
+                      <span
+                        className="text-xs"
+                        role="img"
+                        aria-label={category.name}
+                      >
+                        {category.icon}
+                      </span>
+                      <span>
+                        {category.name.length > 8
+                          ? category.name.substring(0, 8)
+                          : category.name}
+                      </span>
+                      <span
+                        className={`text-xs px-1.5 py-0.5 rounded-full min-w-[20px] text-center ${
+                          selectedCategory === category.id
+                            ? "bg-white/20 text-white/80"
+                            : "bg-gray-600/30 text-gray-400"
+                        }`}
+                      >
+                        {category.count}
+                      </span>
+                    </motion.button>
+                  ))}
+                </div>
               </div>
+
+              {/* Desktop: Primary Categories + Dropdown */}
+              <div className="hidden sm:block">
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  {/* Show primary categories (All, Featured, and top 4 categories) */}
+                  {categoriesWithCounts.slice(0, 6).map((category) => (
+                    <motion.button
+                      key={category.id}
+                      onClick={() => setSelectedCategory(category.id)}
+                      className={`relative flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                        selectedCategory === category.id
+                          ? "border border-purple-500 bg-purple-900/30 text-purple-300 shadow-lg shadow-purple-900/20"
+                          : "bg-[#2E313C]/50 text-gray-300 hover:bg-[#2E313C]/80 hover:text-white border border-[#3E4154]/50 hover:border-purple-500/30"
+                      }`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <span
+                        className="text-sm"
+                        role="img"
+                        aria-label={category.name}
+                      >
+                        {category.icon}
+                      </span>
+                      <span>{category.name}</span>
+                      <span
+                        className={`text-xs px-1.5 py-0.5 rounded-full min-w-[20px] text-center ${
+                          selectedCategory === category.id
+                            ? "bg-white/20 text-white/80"
+                            : "bg-gray-600/30 text-gray-400"
+                        }`}
+                      >
+                        {category.count}
+                      </span>
+                    </motion.button>
+                  ))}
+
+                  {/* More Categories Dropdown */}
+                  {categoriesWithCounts.length > 6 && (
+                    <div className="relative category-dropdown">
+                      <motion.button
+                        onClick={() =>
+                          setIsCategoryDropdownOpen(!isCategoryDropdownOpen)
+                        }
+                        className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                          categoriesWithCounts
+                            .slice(6)
+                            .some((cat) => cat.id === selectedCategory)
+                            ? "border border-purple-500 bg-purple-900/30 text-purple-300 shadow-lg shadow-purple-900/20"
+                            : "bg-[#2E313C]/50 text-gray-300 hover:bg-[#2E313C]/80 hover:text-white border border-[#3E4154]/50 hover:border-purple-500/30"
+                        }`}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <span>📋</span>
+                        <span>More</span>
+                        <span className="text-xs">
+                          {isCategoryDropdownOpen ? "▲" : "▼"}
+                        </span>
+                      </motion.button>
+
+                      {/* Dropdown Menu */}
+                      <AnimatePresence>
+                        {isCategoryDropdownOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            transition={{ duration: 0.2 }}
+                            className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 bg-[#1E2132] rounded-xl shadow-xl border border-[#2E313C] min-w-[200px] z-30 overflow-hidden"
+                          >
+                            <div className="p-3">
+                              <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2 px-1">
+                                More Categories
+                              </h3>
+                              <div className="space-y-1">
+                                {categoriesWithCounts
+                                  .slice(6)
+                                  .map((category) => (
+                                    <button
+                                      key={category.id}
+                                      onClick={() => {
+                                        setSelectedCategory(category.id);
+                                        setIsCategoryDropdownOpen(false);
+                                      }}
+                                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
+                                        selectedCategory === category.id
+                                          ? "bg-purple-900/40 text-purple-300 border border-purple-500/30"
+                                          : "text-gray-300 hover:bg-[#2E313C]/60 hover:text-white"
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <span>{category.icon}</span>
+                                        <span>{category.name}</span>
+                                      </div>
+                                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-600/30 text-gray-400">
+                                        {category.count}
+                                      </span>
+                                    </button>
+                                  ))}
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Active Category Indicator */}
+              {selectedCategory !== "all" && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex items-center justify-center mt-2"
+                >
+                  <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/10 to-purple-600/10 border border-purple-500/30 rounded-full">
+                    <span className="text-purple-400 text-sm">Showing:</span>
+                    <span className="text-white font-medium text-sm">
+                      {
+                        categoriesWithCounts.find(
+                          (cat) => cat.id === selectedCategory
+                        )?.name
+                      }
+                    </span>
+                    <span className="text-purple-300 text-sm">
+                      (
+                      {
+                        categoriesWithCounts.find(
+                          (cat) => cat.id === selectedCategory
+                        )?.count
+                      }{" "}
+                      events)
+                    </span>
+                    <button
+                      onClick={() => setSelectedCategory("all")}
+                      className="ml-2 text-gray-400 hover:text-white transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
             </motion.div>
           </div>
 
@@ -910,7 +1077,87 @@ export default function EventsPage() {
           -webkit-box-orient: vertical;
           overflow: hidden;
         }
+
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
       `}</style>
     </div>
+  );
+}
+
+// Loading component for Suspense fallback
+function EventsPageLoading() {
+  return (
+    <div className="min-h-screen bg-slate-900 relative overflow-hidden">
+      <div className="relative z-10 pt-20 sm:pt-24 pb-8 sm:pb-12">
+        <div className="max-w-9xl mx-auto px-2 sm:px-4 md:px-6">
+          {/* Header skeleton */}
+          <div className="mb-8 sm:mb-12">
+            <div className="text-center mb-6 sm:mb-8">
+              <div className="animate-pulse space-y-4">
+                <div className="h-8 bg-slate-800 rounded w-64 mx-auto"></div>
+                <div className="h-12 bg-slate-800 rounded w-96 mx-auto"></div>
+                <div className="h-4 bg-slate-800 rounded w-80 mx-auto"></div>
+              </div>
+            </div>
+
+            {/* Search and filters skeleton */}
+            <div className="mb-4 sm:mb-6 flex flex-col gap-3 sm:gap-4 items-center justify-center">
+              <div className="w-full flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-center max-w-2xl">
+                <div className="animate-pulse h-12 bg-slate-800 rounded-lg flex-1"></div>
+                <div className="animate-pulse h-12 bg-slate-800 rounded-lg w-24"></div>
+              </div>
+            </div>
+
+            {/* Categories skeleton */}
+            <div className="mt-4 sm:mt-6">
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {Array.from({ length: 6 }, (_, i) => (
+                  <div
+                    key={i}
+                    className="animate-pulse h-10 bg-slate-800 rounded-full w-24 flex-shrink-0"
+                  ></div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Events grid skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 p-1">
+            {Array.from({ length: 6 }, (_, i) => (
+              <div
+                key={i}
+                className="bg-slate-800 rounded-xl overflow-hidden animate-pulse"
+              >
+                <div className="h-40 sm:h-48 bg-slate-700"></div>
+                <div className="p-4 space-y-3">
+                  <div className="h-6 bg-slate-700 rounded w-3/4"></div>
+                  <div className="h-4 bg-slate-700 rounded w-full"></div>
+                  <div className="h-4 bg-slate-700 rounded w-2/3"></div>
+                  <div className="flex gap-2">
+                    <div className="h-6 bg-slate-700 rounded w-16"></div>
+                    <div className="h-6 bg-slate-700 rounded w-20"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function EventsPage() {
+  return (
+    <Suspense fallback={<EventsPageLoading />}>
+      <EventsPageContent />
+    </Suspense>
   );
 }

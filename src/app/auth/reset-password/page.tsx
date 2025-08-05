@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import Link from "next/link";
@@ -34,7 +34,7 @@ const heroImages = [
   },
 ];
 
-export default function ResetPasswordPage() {
+function ResetPasswordPageContent() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -456,5 +456,76 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Loading component for Suspense fallback
+function ResetPasswordPageLoading() {
+  return (
+    <div className="min-h-screen bg-slate-900 flex">
+      {/* Left Side - Loading Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4">
+        <div className="w-full max-w-md mx-auto">
+          {/* Back button skeleton */}
+          <div className="mb-6">
+            <div className="animate-pulse h-10 bg-slate-800 rounded-lg w-32"></div>
+          </div>
+
+          <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 shadow-2xl rounded-lg">
+            <div className="p-6">
+              {/* Logo */}
+              <div className="flex justify-center mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <Ticket className="h-6 w-6 text-white" />
+                  </div>
+                  <span className="text-2xl font-bold text-white">
+                    ShowPass
+                  </span>
+                </div>
+              </div>
+
+              <div className="animate-pulse space-y-4">
+                <div className="h-8 bg-slate-700 rounded w-3/4 mx-auto"></div>
+                <div className="h-4 bg-slate-700 rounded w-full mx-auto"></div>
+
+                {/* Form skeleton */}
+                <div className="space-y-4 mt-6">
+                  <div className="space-y-2">
+                    <div className="h-4 bg-slate-700 rounded w-24"></div>
+                    <div className="h-10 bg-slate-700 rounded"></div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-slate-700 rounded w-32"></div>
+                    <div className="h-10 bg-slate-700 rounded"></div>
+                  </div>
+                  <div className="h-10 bg-slate-700 rounded"></div>
+                </div>
+
+                <div className="h-4 bg-slate-700 rounded w-2/3 mx-auto mt-6"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Side - Image skeleton */}
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden bg-slate-800">
+        <div className="absolute bottom-0 left-0 right-0 p-8 text-white z-10">
+          <div className="animate-pulse space-y-2">
+            <div className="h-8 bg-slate-700 rounded w-3/4"></div>
+            <div className="h-6 bg-slate-700 rounded w-2/3"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<ResetPasswordPageLoading />}>
+      <ResetPasswordPageContent />
+    </Suspense>
   );
 }

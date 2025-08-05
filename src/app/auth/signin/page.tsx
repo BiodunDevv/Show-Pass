@@ -73,14 +73,14 @@ export default function SignInPage() {
     try {
       await login(email, password);
       router.push("/");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Login failed:", error);
 
       // Check if it's a 403 error (email verification required)
       if (
-        error.message?.includes("403") ||
-        error.message?.toLowerCase().includes("verification") ||
-        error.message?.toLowerCase().includes("verify")
+        (error instanceof Error && error.message?.includes("403")) ||
+        (error instanceof Error && error.message?.toLowerCase().includes("verification")) ||
+        (error instanceof Error && error.message?.toLowerCase().includes("verify"))
       ) {
         // Redirect to verify page with email
         router.push(`/auth/verify?email=${encodeURIComponent(email)}`);
@@ -277,7 +277,7 @@ export default function SignInPage() {
 
                 <div className="mt-6 text-center">
                   <p className="text-xs text-gray-400">
-                    Don't have an account?{" "}
+                    Don&apos;t have an account?{" "}
                     <Link
                       href="/auth/signup"
                       className="text-purple-400 hover:text-purple-300 font-semibold"

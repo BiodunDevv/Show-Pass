@@ -15,7 +15,6 @@ import {
   SlidersHorizontal,
   BookOpen,
   Star,
-  TrendingUp,
   LayoutGrid,
 } from "lucide-react";
 import Image from "next/image";
@@ -50,6 +49,7 @@ export default function BlogPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isClient, setIsClient] = useState(false);
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isArticleHovered, setIsArticleHovered] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -91,6 +91,20 @@ export default function BlogPage() {
 
     loadData();
   }, [isClient, currentPage, fetchArticles, fetchArticleCategories]);
+
+  // Handle click outside to close dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest(".dropdown-container")) {
+        setIsFilterMenuOpen(false);
+        setIsCategoryDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Create dynamic categories with counts
   const dynamicCategories = React.useMemo(() => {
@@ -175,11 +189,7 @@ export default function BlogPage() {
       month: "long",
       day: "numeric",
     });
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-  };
+  }
 
   // Handle tag selection
   const toggleTag = (tag: string) => {
@@ -269,7 +279,7 @@ export default function BlogPage() {
                 </div>
 
                 {/* Filter button */}
-                <div className="relative sm:flex-shrink-0">
+                <div className="relative sm:flex-shrink-0 dropdown-container">
                   <motion.button
                     onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
                     className={`flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border transition-all duration-300 w-full sm:w-auto text-sm sm:text-base ${
@@ -343,39 +353,133 @@ export default function BlogPage() {
               </div>
             </motion.div>
 
-            {/* Minimal Category Pills */}
+            {/* Improved Category Selection */}
             <motion.div
               className="mt-4 sm:mt-6"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <div className="flex flex-wrap gap-1.5 sm:gap-2 items-center justify-center">
-                {dynamicCategories.map((category) => (
+              {/* Mobile: Horizontal scroll */}
+              <div className="sm:hidden overflow-x-auto scrollbar-hide pb-2">
+                <div className="flex gap-2 min-w-max px-1">
+                  {dynamicCategories.slice(0, 6).map((category) => (
+                    <motion.button
+                      key={category.id}
+                      onClick={() => setSelectedCategory(category.id)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 whitespace-nowrap ${
+                        selectedCategory === category.id
+                          ? "border border-purple-500 bg-purple-900/30 text-purple-300 shadow-lg shadow-purple-900/20"
+                          : "bg-[#2E313C]/50 text-gray-300 hover:bg-[#2E313C]/80 hover:text-white border border-[#3E4154]/50"
+                      }`}
+                    >
+                      <span role="img" aria-label={category.name}>
+                        {category.icon}
+                      </span>
+                      <span>
+                        {category.name.length > 8
+                          ? category.name.substring(0, 8) + "..."
+                          : category.name}
+                      </span>
+                      <span
+                        className={`text-xs px-1 py-0.5 rounded-full ${
+                          selectedCategory === category.id
+                            ? "bg-white/20 text-white/80"
+                            : "bg-gray-600/30 text-gray-400"
+                        }`}
+                      >
+                        {category.count}
+                      </span>
+                    </motion.button>
+                  ))}
+                  {dynamicCategories.length > 6 && (
+                    <div className="relative dropdown-container">
+                      <motion.button
+                        onClick={() =>
+                          setIsCategoryDropdownOpen(!isCategoryDropdownOpen)
+                        }
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 bg-[#2E313C]/50 text-gray-300 hover:bg-[#2E313C]/80 hover:text-white border border-[#3E4154]/50 whitespace-nowrap"
+                      >
+                        <span>More</span>
+                        <svg
+                          className={`w-3 h-3 transition-transform duration-200 ${
+                            isCategoryDropdownOpen ? "rotate-180" : ""
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </motion.button>
+
+                      <AnimatePresence>
+                        {isCategoryDropdownOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            transition={{ duration: 0.2 }}
+                            className="absolute top-full mt-2 right-0 bg-[#1E2132] rounded-xl shadow-lg border border-[#2E313C] w-48 z-20 overflow-hidden"
+                          >
+                            <div className="p-2 max-h-60 overflow-y-auto">
+                              {dynamicCategories.slice(6).map((category) => (
+                                <button
+                                  key={category.id}
+                                  onClick={() => {
+                                    setSelectedCategory(category.id);
+                                    setIsCategoryDropdownOpen(false);
+                                  }}
+                                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
+                                    selectedCategory === category.id
+                                      ? "bg-purple-600 text-white"
+                                      : "text-gray-300 hover:bg-[#2E313C]"
+                                  }`}
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <span role="img" aria-label={category.name}>
+                                      {category.icon}
+                                    </span>
+                                    <span>{category.name}</span>
+                                  </span>
+                                  <span className="text-xs bg-gray-600/30 text-gray-400 px-1.5 py-0.5 rounded-full">
+                                    {category.count}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Desktop: Show main categories with dropdown */}
+              <div className="hidden sm:flex flex-wrap gap-2 items-center justify-center">
+                {/* Show first 5 main categories */}
+                {dynamicCategories.slice(0, 5).map((category) => (
                   <motion.button
                     key={category.id}
                     onClick={() => setSelectedCategory(category.id)}
-                    className={`relative flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 ${
+                    className={`relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                       selectedCategory === category.id
                         ? "border border-purple-500 bg-purple-900/30 text-purple-300 shadow-lg shadow-purple-900/20"
                         : "bg-[#2E313C]/50 text-gray-300 hover:bg-[#2E313C]/80 hover:text-white border border-[#3E4154]/50 hover:border-purple-500/30"
                     }`}
                   >
-                    <span
-                      className="text-xs sm:text-sm"
-                      role="img"
-                      aria-label={category.name}
-                    >
+                    <span role="img" aria-label={category.name}>
                       {category.icon}
                     </span>
-                    <span className="hidden sm:inline">{category.name}</span>
-                    <span className="sm:hidden">
-                      {category.name.length > 8
-                        ? category.name.substring(0, 8) + "..."
-                        : category.name}
-                    </span>
+                    <span>{category.name}</span>
                     <span
-                      className={`text-xs px-1 sm:px-1.5 py-0.5 rounded-full ${
+                      className={`text-xs px-1.5 py-0.5 rounded-full ${
                         selectedCategory === category.id
                           ? "bg-white/20 text-white/80"
                           : "bg-gray-600/30 text-gray-400"
@@ -385,6 +489,98 @@ export default function BlogPage() {
                     </span>
                   </motion.button>
                 ))}
+
+                {/* More categories dropdown */}
+                {dynamicCategories.length > 5 && (
+                  <div className="relative dropdown-container">
+                    <motion.button
+                      onClick={() =>
+                        setIsCategoryDropdownOpen(!isCategoryDropdownOpen)
+                      }
+                      className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                        isCategoryDropdownOpen
+                          ? "border border-purple-500 bg-purple-900/30 text-purple-300 shadow-lg shadow-purple-900/20"
+                          : "bg-[#2E313C]/50 text-gray-300 hover:bg-[#2E313C]/80 hover:text-white border border-[#3E4154]/50 hover:border-purple-500/30"
+                      }`}
+                    >
+                      <LayoutGrid size={16} />
+                      <span>More Categories</span>
+                      <svg
+                        className={`w-4 h-4 transition-transform duration-200 ${
+                          isCategoryDropdownOpen ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </motion.button>
+
+                    <AnimatePresence>
+                      {isCategoryDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute top-full mt-2 left-0 bg-[#1E2132] rounded-xl shadow-lg border border-[#2E313C] w-72 z-20 overflow-hidden"
+                        >
+                          <div className="p-3">
+                            <h3 className="font-medium text-gray-200 text-sm mb-3">
+                              All Categories
+                            </h3>
+                            <div className="grid grid-cols-1 gap-1 max-h-60 overflow-y-auto">
+                              {dynamicCategories.slice(5).map((category) => (
+                                <button
+                                  key={category.id}
+                                  onClick={() => {
+                                    setSelectedCategory(category.id);
+                                    setIsCategoryDropdownOpen(false);
+                                  }}
+                                  className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
+                                    selectedCategory === category.id
+                                      ? "bg-purple-600 text-white"
+                                      : "text-gray-300 hover:bg-[#2E313C]"
+                                  }`}
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <span role="img" aria-label={category.name}>
+                                      {category.icon}
+                                    </span>
+                                    <span>{category.name}</span>
+                                  </span>
+                                  <span
+                                    className={`text-xs px-1.5 py-0.5 rounded-full ${
+                                      selectedCategory === category.id
+                                        ? "bg-white/20 text-white/80"
+                                        : "bg-gray-600/30 text-gray-400"
+                                    }`}
+                                  >
+                                    {category.count}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="border-t border-[#2E313C] p-3 bg-[#181B2B] flex justify-end">
+                            <button
+                              onClick={() => setIsCategoryDropdownOpen(false)}
+                              className="px-3 py-1.5 text-sm font-medium text-purple-400 hover:text-purple-300"
+                            >
+                              Close
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>
@@ -781,6 +977,15 @@ export default function BlogPage() {
           -webkit-line-clamp: 3;
           -webkit-box-orient: vertical;
           overflow: hidden;
+        }
+
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
         }
       `}</style>
     </div>
