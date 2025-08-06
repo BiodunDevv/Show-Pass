@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ConditionalNavbar } from "@/components/ConditionalNavbar";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,8 +18,8 @@ export const metadata: Metadata = {
   title: "ShowPass",
   description: "Your go-to platform for event discovery and ticketing",
   icons: {
-    icon: "/favicon.ico"
-  }
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
@@ -31,6 +32,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Script
+          src="https://js.paystack.co/v1/inline.js"
+          strategy="lazyOnload"
+        />
         <ConditionalNavbar />
         {/* Main content of the page */}
         {children}
