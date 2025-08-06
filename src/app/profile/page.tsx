@@ -17,7 +17,6 @@ import {
   Ticket,
   DollarSign,
   Clock,
-  Settings,
   Camera,
   Edit,
   Verified,
@@ -32,11 +31,8 @@ import {
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-
 export default function ProfilePage() {
-  return (
-      <ProfileContent />
-  );
+  return <ProfileContent />;
 }
 
 function ProfileContent() {
@@ -131,9 +127,6 @@ function ProfileContent() {
                   {user?.firstName?.charAt(0)}
                   {user?.lastName?.charAt(0)}
                 </div>
-                <button className="absolute bottom-0 right-0 bg-slate-700 hover:bg-slate-600 text-white p-2 rounded-full transition-colors">
-                  <Camera size={16} />
-                </button>
               </div>
 
               {/* Profile Info */}
@@ -215,22 +208,6 @@ function ProfileContent() {
                 </div>
               </div>
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Link href="/settings">
-                <button className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors">
-                  <Settings size={16} />
-                  Settings
-                </button>
-              </Link>
-              <Link href="/edit-profile">
-                <button className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors">
-                  <Edit size={16} />
-                  Edit Profile
-                </button>
-              </Link>
-            </div>
           </div>
         </motion.div>
 
@@ -248,7 +225,9 @@ function ProfileContent() {
                 title="Events Created"
                 value={
                   userProfile.statistics?.organizerMetrics
-                    ?.totalEventsCreated || 0
+                    ?.totalEventsCreated ||
+                  userProfile.statistics?.eventsCreated ||
+                  0
                 }
                 subtitle="Total events"
               />
@@ -284,7 +263,9 @@ function ProfileContent() {
                 icon={<Ticket className="text-purple-400" />}
                 title="Events Attended"
                 value={
-                  userProfile.statistics?.userMetrics?.totalEventsAttended || 0
+                  userProfile.statistics?.userMetrics?.totalEventsAttended ||
+                  userProfile.statistics?.eventsAttended ||
+                  0
                 }
                 subtitle="All time"
               />
@@ -299,6 +280,7 @@ function ProfileContent() {
                 title="Favorite Category"
                 value={
                   userProfile.statistics?.userMetrics?.favoriteCategory ||
+                  userProfile.financialSummary?.favoriteCategory ||
                   "None"
                 }
                 subtitle="Most attended"
@@ -389,6 +371,16 @@ function StatCard({
 }
 
 function OverviewTab({ userProfile }: { userProfile: any }) {
+  const { user } = useAuthStore();
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* Account Summary */}
@@ -402,28 +394,28 @@ function OverviewTab({ userProfile }: { userProfile: any }) {
           <div className="flex justify-between items-center py-3 border-b border-slate-700/50">
             <span className="text-slate-300">Account Age</span>
             <span className="text-white font-medium">
-              {userProfile.statistics?.accountAge}
+              Joined {formatDate(user?.createdAt || "")}
             </span>
           </div>
           <div className="flex justify-between items-center py-3 border-b border-slate-700/50">
             <span className="text-slate-300">Last Activity</span>
             <span className="text-white font-medium">
-              {new Date(
-                userProfile.statistics?.lastActivity
-              ).toLocaleDateString()}
+              {formatDate(userProfile.statistics?.lastActivity || "")}
             </span>
           </div>
           <div className="flex justify-between items-center py-3 border-b border-slate-700/50">
             <span className="text-slate-300">Verification Status</span>
             <span
               className={`flex items-center gap-2 ${
-                userProfile.statistics?.verificationStatus
+                userProfile.statistics?.verificationStatus ||
+                userProfile.isVerified
                   ? "text-green-400"
                   : "text-red-400"
               }`}
             >
               <Verified size={16} />
-              {userProfile.statistics?.verificationStatus
+              {userProfile.statistics?.verificationStatus ||
+              userProfile.isVerified
                 ? "Verified"
                 : "Unverified"}
             </span>
@@ -431,7 +423,7 @@ function OverviewTab({ userProfile }: { userProfile: any }) {
           <div className="flex justify-between items-center py-3">
             <span className="text-slate-300">Account Status</span>
             <span className="text-green-400 capitalize">
-              {userProfile.statistics?.accountStatus}
+              {userProfile.statistics?.accountStatus || "active"}
             </span>
           </div>
         </div>
@@ -451,7 +443,11 @@ function OverviewTab({ userProfile }: { userProfile: any }) {
               {new Intl.NumberFormat("en-NG", {
                 style: "currency",
                 currency: "NGN",
-              }).format(userProfile.financialSummary?.totalSpent || 0)}
+              }).format(
+                userProfile.financialSummary?.totalSpent ||
+                  userProfile.totalSpent ||
+                  0
+              )}
             </span>
           </div>
           <div className="flex justify-between items-center py-3 border-b border-slate-700/50">
@@ -468,10 +464,13 @@ function OverviewTab({ userProfile }: { userProfile: any }) {
           <div className="flex justify-between items-center py-3 border-b border-slate-700/50">
             <span className="text-slate-300">Last Purchase</span>
             <span className="text-white font-medium">
-              {userProfile.financialSummary?.lastPurchase
+              {userProfile.financialSummary?.lastPurchase?.date
                 ? new Date(
-                    userProfile.financialSummary.lastPurchase.date ||
-                      userProfile.financialSummary.lastPurchase
+                    userProfile.financialSummary.lastPurchase.date
+                  ).toLocaleDateString()
+                : userProfile.activitySummary?.lastBooking
+                ? new Date(
+                    userProfile.activitySummary.lastBooking
                   ).toLocaleDateString()
                 : "None"}
             </span>
@@ -479,7 +478,9 @@ function OverviewTab({ userProfile }: { userProfile: any }) {
           <div className="flex justify-between items-center py-3">
             <span className="text-slate-300">Favorite Category</span>
             <span className="text-purple-400 font-medium">
-              {userProfile.financialSummary?.favoriteCategory}
+              {userProfile.financialSummary?.favoriteCategory ||
+                userProfile.statistics?.userMetrics?.favoriteCategory ||
+                "None"}
             </span>
           </div>
         </div>
@@ -493,43 +494,6 @@ function ActivityTab({ userProfile }: { userProfile: any }) {
 
   return (
     <div className="space-y-8">
-      {/* Recent Activity */}
-      <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6">
-        <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-          <Activity className="text-blue-400" size={20} />
-          Recent Activity
-        </h3>
-
-        <div className="space-y-4">
-          <div className="flex justify-between items-center py-3 border-b border-slate-700/50">
-            <span className="text-slate-300">Total Bookings</span>
-            <span className="text-white font-medium">
-              {userProfile.activitySummary?.totalBookings || 0}
-            </span>
-          </div>
-          <div className="flex justify-between items-center py-3 border-b border-slate-700/50">
-            <span className="text-slate-300">Last Booking</span>
-            <span className="text-white font-medium">
-              {userProfile.activitySummary?.lastBooking
-                ? new Date(
-                    userProfile.activitySummary.lastBooking
-                  ).toLocaleDateString()
-                : "None"}
-            </span>
-          </div>
-          <div className="flex justify-between items-center py-3">
-            <span className="text-slate-300">Last Login</span>
-            <span className="text-white font-medium">
-              {userProfile.activitySummary?.lastLogin
-                ? new Date(
-                    userProfile.activitySummary.lastLogin
-                  ).toLocaleDateString()
-                : "Never"}
-            </span>
-          </div>
-        </div>
-      </div>
-
       {/* Recent Events/Bookings */}
       {isOrganizer ? (
         <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6">
@@ -644,19 +608,23 @@ function StatisticsTab({ userProfile }: { userProfile: any }) {
           <div className="flex justify-between items-center py-3 border-b border-slate-700/50">
             <span className="text-slate-300">Events Created</span>
             <span className="text-white font-medium">
-              {userProfile.statistics?.eventsCreated || 0}
+              {userProfile.statistics?.eventsCreated ||
+                userProfile.statistics?.organizerMetrics?.totalEventsCreated ||
+                0}
             </span>
           </div>
           <div className="flex justify-between items-center py-3 border-b border-slate-700/50">
             <span className="text-slate-300">Events Attended</span>
             <span className="text-white font-medium">
-              {userProfile.statistics?.eventsAttended || 0}
+              {userProfile.statistics?.eventsAttended ||
+                userProfile.statistics?.userMetrics?.totalEventsAttended ||
+                0}
             </span>
           </div>
           <div className="flex justify-between items-center py-3">
             <span className="text-slate-300">Account Age</span>
             <span className="text-white font-medium">
-              {userProfile.statistics?.accountAge}
+              {userProfile.statistics?.accountAge || "N/A"}
             </span>
           </div>
         </div>
@@ -750,15 +718,6 @@ function BusinessTab({ userProfile }: { userProfile: any }) {
               {userProfile.verified ? "Verified" : "Pending"}
             </span>
           </div>
-          <div className="flex justify-between items-center py-3">
-            <span className="text-slate-300">Rating</span>
-            <div className="flex items-center gap-1">
-              <Star className="text-yellow-400" size={16} />
-              <span className="text-white font-medium">
-                {userProfile.rating || 0}/5
-              </span>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -773,15 +732,13 @@ function BusinessTab({ userProfile }: { userProfile: any }) {
           <div className="flex justify-between items-center py-3 border-b border-slate-700/50">
             <span className="text-slate-300">Total Events Created</span>
             <span className="text-white font-medium">
-              {userProfile.totalEventsCreated || 0}
+              {userProfile.totalEventsCreated ||
+                userProfile.statistics?.organizerMetrics?.totalEventsCreated ||
+                userProfile.statistics?.eventsCreated ||
+                0}
             </span>
           </div>
-          <div className="flex justify-between items-center py-3 border-b border-slate-700/50">
-            <span className="text-slate-300">Total Tickets Sold</span>
-            <span className="text-white font-medium">
-              {userProfile.totalTicketsSold || 0}
-            </span>
-          </div>
+
           <div className="flex justify-between items-center py-3">
             <span className="text-slate-300">Average Attendance</span>
             <span className="text-white font-medium">

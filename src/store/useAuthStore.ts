@@ -20,6 +20,23 @@ interface Statistics {
   eventsAttended: number;
   accountAge: string;
   lastActivity: string;
+  verificationStatus?: boolean;
+  accountStatus?: string;
+  totalBookings?: number;
+  organizerMetrics?: {
+    totalEventsCreated: number;
+    totalRevenue: number;
+    averageEventAttendance: number;
+    pendingEvents: number;
+    approvedEvents: number;
+    recentEvents: any[];
+  };
+  userMetrics?: {
+    totalEventsAttended: number;
+    favoriteCategory: string;
+    upcomingEvents: number;
+    recentBookings: any[];
+  };
 }
 
 interface UserProfileExtended {

@@ -40,7 +40,7 @@ interface EventDetails {
     lastName: string;
     email: string;
     phone: string;
-    fullName: string;
+    fullName?: string;
   };
   category: string;
   startDate: string;
@@ -71,15 +71,48 @@ interface EventDetails {
   tags: string[];
   maxAttendees: number;
   currentAttendees: number;
-  totalTickets: number;
-  ticketsSold: number;
-  totalRevenue: number;
-  isFree: boolean;
-  isUpcoming: boolean;
-  isOngoing: boolean;
-  isPublic?: boolean;
+  approved: boolean;
+  status: "pending" | "approved" | "rejected";
   featured: boolean;
-  status: string;
+  isPublic: boolean;
+  requiresApproval: boolean;
+  isFreeEvent: boolean;
+  notificationsSent: boolean;
+  warningCount: number;
+  flaggedForDeletion: boolean;
+  warnings: any[];
+  postApprovalModifications: any[];
+  createdAt: string;
+  updatedAt: string;
+  approvedAt?: string;
+  approvedBy?: string;
+  accessContext?: {
+    canEdit: boolean;
+    canDelete: boolean;
+    canApprove: boolean;
+    canFlag: boolean;
+    viewingAs: "owner" | "admin" | "public";
+  };
+  statusInfo?: {
+    isApproved: boolean;
+    isPending: boolean;
+    isOwner: boolean;
+    requiresApproval: boolean;
+    visibilityReason: string;
+  };
+  bookingStats?: {
+    confirmed: number;
+    pending: number;
+    cancelled: number;
+    totalTicketsSold: number;
+  };
+  // Computed properties
+  totalTickets?: number;
+  ticketsSold?: number;
+  totalRevenue?: number;
+  isFree?: boolean;
+  isUpcoming?: boolean;
+  isOngoing?: boolean;
 }
 
 export default function EventDetailsPage() {
@@ -114,7 +147,9 @@ export default function EventDetailsPage() {
   const [attendeesSearch, setAttendeesSearch] = useState("");
 
   // Check if current user is the organizer of this event
-  const isEventOrganizer = user && event && user._id === event.organizer._id;
+  const isEventOrganizer =
+    (user && event && user._id === event.organizer._id) ||
+    event?.statusInfo?.isOwner === true;
 
   // Get user's tickets for this specific event
   const userEventTickets = userBookings.filter(
@@ -130,8 +165,22 @@ export default function EventDetailsPage() {
     const fetchEventDetails = async () => {
       try {
         setLoading(true);
+
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+
+        // Add authorization header if user is logged in
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+
         const data = await apiRequest(
-          `${API_CONFIG.ENDPOINTS.EVENTS.GET_BY_ID}/${params.id}`
+          `${API_CONFIG.ENDPOINTS.EVENTS.GET_BY_ID}/${params.id}`,
+          {
+            method: "GET",
+            headers,
+          }
         );
 
         if (data.success) {
@@ -140,45 +189,17 @@ export default function EventDetailsPage() {
           throw new Error(data.message || "Failed to fetch event");
         }
       } catch (err) {
+        console.error("Error fetching event details:", err);
         setError(err instanceof Error ? err.message : "Failed to fetch event");
       } finally {
         setLoading(false);
       }
     };
 
-    const fetchUserProfileData = async () => {
-      if (user && token) {
-        try {
-          const profileData = await fetchUserProfile();
-          setUserProfile(profileData);
-          // Extract purchases for this event
-          if (profileData?.statistics?.userMetrics?.recentBookings) {
-            setUserPurchases(profileData.statistics.userMetrics.recentBookings);
-          }
-
-          // Fetch user bookings
-          try {
-            await fetchUserBookings();
-          } catch (error) {
-            // Only log error if it's not an authentication issue
-            if (
-              error instanceof Error &&
-              !error.message.includes("Authentication token not found")
-            ) {
-              console.error("Error fetching user bookings:", error);
-            }
-          }
-        } catch (error) {
-          console.error("Failed to fetch user profile:", error);
-        }
-      }
-    };
-
     if (params.id) {
       fetchEventDetails();
-      fetchUserProfileData();
     }
-  }, [params.id, user, fetchUserProfile, fetchUserBookings]);
+  }, [params.id, token]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -524,12 +545,25 @@ export default function EventDetailsPage() {
               <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
                 {event.category}
               </div>
+              {/* Event Status Indicator */}
+              {event.statusInfo?.isPending && (
+                <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  <span>Pending Approval</span>
+                </div>
+              )}
+              {event.status === "approved" && event.statusInfo?.isApproved && (
+                <div className="bg-gradient-to-r from-green-500 to-green-600 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium flex items-center gap-1">
+                  <CheckCircle className="h-3 w-3" />
+                  <span>Approved</span>
+                </div>
+              )}
             </div>
             <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">
               {event.title}
             </h1>
             <p className="text-gray-200 text-sm sm:text-base lg:text-lg">
-              by {event.organizer.fullName}
+              by {event.organizer.firstName} {event.organizer.lastName}
             </p>
           </div>
         </div>
@@ -603,7 +637,10 @@ export default function EventDetailsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6 p-3 sm:p-4 bg-slate-700/30 rounded-lg">
                 <div className="text-center">
                   <p className="text-lg sm:text-2xl font-bold text-white">
-                    {event.totalTickets}
+                    {event.ticketTypes.reduce(
+                      (sum, ticket) => sum + ticket.quantity,
+                      0
+                    )}
                   </p>
                   <p className="text-xs sm:text-sm text-gray-400">
                     Total Tickets
@@ -611,7 +648,10 @@ export default function EventDetailsPage() {
                 </div>
                 <div className="text-center">
                   <p className="text-lg sm:text-2xl font-bold text-green-400">
-                    {event.ticketsSold}
+                    {event.ticketTypes.reduce(
+                      (sum, ticket) => sum + ticket.sold,
+                      0
+                    )}
                   </p>
                   <p className="text-xs sm:text-sm text-gray-400">
                     Tickets Sold
@@ -619,7 +659,13 @@ export default function EventDetailsPage() {
                 </div>
                 <div className="text-center">
                   <p className="text-lg sm:text-2xl font-bold text-purple-400">
-                    ₦{event.totalRevenue.toLocaleString()}
+                    ₦
+                    {event.ticketTypes
+                      .reduce(
+                        (total, ticket) => total + ticket.sold * ticket.price,
+                        0
+                      )
+                      .toLocaleString()}
                   </p>
                   <p className="text-xs sm:text-sm text-gray-400">
                     Total Revenue
@@ -636,6 +682,58 @@ export default function EventDetailsPage() {
                   {event.description}
                 </p>
               </div>
+
+              {/* Event Status Information for Organizers */}
+              {event.statusInfo && event.statusInfo.isOwner && (
+                <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-slate-700/50 border border-slate-600 rounded-lg">
+                  <h3 className="text-base sm:text-lg font-semibold text-white mb-2">
+                    Event Status
+                  </h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`w-2 h-2 rounded-full ${
+                          event.statusInfo.isApproved
+                            ? "bg-green-400"
+                            : event.statusInfo.isPending
+                            ? "bg-yellow-400"
+                            : "bg-red-400"
+                        }`}
+                      />
+                      <span className="text-white font-medium">
+                        {event.statusInfo.isApproved
+                          ? "Approved"
+                          : event.statusInfo.isPending
+                          ? "Pending Approval"
+                          : "Rejected"}
+                      </span>
+                    </div>
+                    <p className="text-gray-300 text-sm">
+                      {event.statusInfo.visibilityReason}
+                    </p>
+                    {event.statusInfo.isPending && (
+                      <p className="text-yellow-400 text-sm">
+                        Your event is currently under review. You can still edit
+                        it while pending approval.
+                      </p>
+                    )}
+                    {event.accessContext && (
+                      <div className="flex gap-2 mt-3">
+                        {event.accessContext.canEdit && (
+                          <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs">
+                            Can Edit
+                          </span>
+                        )}
+                        {event.accessContext.canDelete && (
+                          <span className="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs">
+                            Can Delete
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Tags */}
               {event.tags && event.tags.length > 0 && (
@@ -658,25 +756,26 @@ export default function EventDetailsPage() {
 
               {/* Event Status Indicators */}
               <div className="mt-4 sm:mt-6 flex flex-wrap gap-2 sm:gap-3">
-                {event.isUpcoming && (
+                {new Date(event.startDate) > new Date() && (
                   <span className="px-2 sm:px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs sm:text-sm border border-green-500/30">
                     🗓️ <span className="hidden sm:inline">Upcoming Event</span>
                     <span className="sm:hidden">Upcoming</span>
                   </span>
                 )}
-                {event.isOngoing && (
-                  <span className="px-2 sm:px-3 py-1 bg-orange-500/20 text-orange-400 rounded-full text-xs sm:text-sm border border-orange-500/30">
-                    🔴 <span className="hidden sm:inline">Live Now</span>
-                    <span className="sm:hidden">Live</span>
-                  </span>
-                )}
+                {new Date(event.startDate) <= new Date() &&
+                  new Date(event.endDate) >= new Date() && (
+                    <span className="px-2 sm:px-3 py-1 bg-orange-500/20 text-orange-400 rounded-full text-xs sm:text-sm border border-orange-500/30">
+                      🔴 <span className="hidden sm:inline">Live Now</span>
+                      <span className="sm:hidden">Live</span>
+                    </span>
+                  )}
                 {event.featured && (
                   <span className="px-2 sm:px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs sm:text-sm border border-yellow-500/30">
                     ⭐ <span className="hidden sm:inline">Featured Event</span>
                     <span className="sm:hidden">Featured</span>
                   </span>
                 )}
-                {!event.isFree && (
+                {event.ticketTypes.some((ticket) => ticket.price > 0) && (
                   <span className="px-2 sm:px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs sm:text-sm border border-blue-500/30">
                     💳 <span className="hidden sm:inline">Paid Event</span>
                     <span className="sm:hidden">Paid</span>
@@ -939,8 +1038,9 @@ export default function EventDetailsPage() {
                       </p>
                     </div>
                     <p className="text-gray-400 text-sm">
-                      This is your event. Only users with user accounts can
-                      purchase tickets.
+                      {event.statusInfo?.isPending
+                        ? "Your event is pending approval. Once approved, users can purchase tickets."
+                        : "This is your event. Users can purchase tickets once it's approved."}
                     </p>
                   </div>
                   <div className="bg-slate-700/30 rounded-lg p-4">
@@ -948,17 +1048,42 @@ export default function EventDetailsPage() {
                     <div className="grid grid-cols-2 gap-4 text-center">
                       <div>
                         <p className="text-lg font-bold text-green-400">
-                          {event.ticketsSold}
+                          {event.ticketTypes.reduce(
+                            (sum, ticket) => sum + ticket.sold,
+                            0
+                          )}
                         </p>
                         <p className="text-xs text-gray-400">Sold</p>
                       </div>
                       <div>
                         <p className="text-lg font-bold text-yellow-400">
-                          {event.totalTickets - event.ticketsSold}
+                          {event.ticketTypes.reduce(
+                            (sum, ticket) => sum + ticket.quantity,
+                            0
+                          ) -
+                            event.ticketTypes.reduce(
+                              (sum, ticket) => sum + ticket.sold,
+                              0
+                            )}
                         </p>
                         <p className="text-xs text-gray-400">Remaining</p>
                       </div>
                     </div>
+                  </div>
+                </div>
+              ) : event.statusInfo?.isPending ? (
+                <div className="space-y-4">
+                  <div className="text-center p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Clock className="h-5 w-5 text-yellow-400" />
+                      <p className="text-yellow-300 font-semibold">
+                        Event Pending Approval
+                      </p>
+                    </div>
+                    <p className="text-gray-400 text-sm">
+                      This event is currently under review and tickets are not
+                      yet available for purchase.
+                    </p>
                   </div>
                 </div>
               ) : user && user.role === "organizer" ? (
@@ -1051,7 +1176,7 @@ export default function EventDetailsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="font-semibold text-white text-sm sm:text-base lg:text-lg truncate">
-                        {event.organizer.fullName}
+                        {event.organizer.firstName} {event.organizer.lastName}
                       </p>
                       {isEventOrganizer && (
                         <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs border border-blue-500/30">
@@ -1087,7 +1212,10 @@ export default function EventDetailsPage() {
                     </div>
                     <div>
                       <p className="text-lg font-bold text-green-400">
-                        {event.totalTickets}
+                        {event.ticketTypes.reduce(
+                          (sum, ticket) => sum + ticket.quantity,
+                          0
+                        )}
                       </p>
                       <p className="text-xs text-gray-400">Total Capacity</p>
                     </div>
@@ -1175,7 +1303,10 @@ export default function EventDetailsPage() {
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-purple-400">
-                        {event.ticketsSold}
+                        {event.ticketTypes.reduce(
+                          (sum, ticket) => sum + ticket.sold,
+                          0
+                        )}
                       </p>
                       <p className="text-xs text-gray-400">Tickets Sold</p>
                     </div>
@@ -1585,42 +1716,6 @@ export default function EventDetailsPage() {
                           </p>
                         </div>
                       )}
-                      {organizerProfile.website && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-400">🌐</span>
-                          <p className="text-gray-300 text-sm truncate">
-                            {organizerProfile.website}
-                          </p>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-400">📅</span>
-                        <p className="text-gray-400 text-xs">
-                          Member since{" "}
-                          {new Date(
-                            organizerProfile.joinDate ||
-                              organizerProfile.createdAt
-                          ).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Contact Info */}
-                  <div
-                    className="bg-slate-700/30 rounded-lg p-4 animate-slideUp"
-                    style={{ animationDelay: "500ms" }}
-                  >
-                    <h4 className="text-lg font-semibold text-white mb-3">
-                      Contact
-                    </h4>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-400">📧</span>
-                        <p className="text-gray-300 text-sm truncate">
-                          {organizerProfile.email}
-                        </p>
-                      </div>
                       {organizerProfile.website && (
                         <div className="flex items-center gap-2">
                           <span className="text-gray-400">🌐</span>

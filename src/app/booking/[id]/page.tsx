@@ -26,8 +26,7 @@ import {
   QrCode,
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
-import { apiRequest } from "@/lib/api";
-import { API_CONFIG } from "@/lib/api";
+import { apiRequest, API_CONFIG } from "@/lib/api";
 import PaymentForm from "@/components/PaymentForm";
 
 interface EventDetails {
@@ -177,25 +176,32 @@ export default function BookingPage() {
 
   // Update attendees array when quantity changes
   useEffect(() => {
-    const newAttendees = Array.from(
-      { length: quantity },
-      (_, index) => attendees[index] || { name: "", email: "", phone: "" }
-    );
-    setAttendees(newAttendees);
-  }, [quantity, attendees]);
+    setAttendees((prevAttendees) => {
+      const newAttendees = Array.from(
+        { length: quantity },
+        (_, index) => prevAttendees[index] || { name: "", email: "", phone: "" }
+      );
+      return newAttendees;
+    });
+  }, [quantity]);
 
   // Auto-fill first attendee with user details
   useEffect(() => {
-    if (useMyDetails && user && attendees.length > 0) {
-      const updatedAttendees = [...attendees];
-      updatedAttendees[0] = {
-        name: `${user.firstName} ${user.lastName}`,
-        email: user.email,
-        phone: user.phone || "",
-      };
-      setAttendees(updatedAttendees);
+    if (useMyDetails && user) {
+      setAttendees((prevAttendees) => {
+        if (prevAttendees.length > 0) {
+          const updatedAttendees = [...prevAttendees];
+          updatedAttendees[0] = {
+            name: `${user.firstName} ${user.lastName}`,
+            email: user.email,
+            phone: user.phone || "",
+          };
+          return updatedAttendees;
+        }
+        return prevAttendees;
+      });
     }
-  }, [useMyDetails, user, attendees]);
+  }, [useMyDetails, user]);
 
   // Helper functions
   const formatDate = (dateString: string) => {
@@ -379,17 +385,26 @@ export default function BookingPage() {
         ? "/api/booking/free-event"
         : API_CONFIG.ENDPOINTS.BOOKINGS.CREATE;
 
-      // Prepare booking data
-      const bookingData: any = {
-        eventId: params.id,
-        ticketType: selectedTicket.name,
-        quantity,
-        attendeeInfo: attendees,
-      };
+      // Prepare booking data based on event type
+      let bookingData: any;
 
-      // Add payment ID only for paid events
-      if (!isFreeEvent) {
-        bookingData.frontendPaymentId = paymentId;
+      if (isFreeEvent) {
+        // For free events, use the exact structure expected by the backend
+        bookingData = {
+          eventId: params.id,
+          ticketType: selectedTicket.name,
+          quantity,
+          attendeeInfo: attendees,
+        };
+      } else {
+        // For paid events, include payment information
+        bookingData = {
+          eventId: params.id,
+          ticketType: selectedTicket.name,
+          quantity,
+          attendeeInfo: attendees,
+          frontendPaymentId: paymentId,
+        };
       }
 
       console.log("Creating booking with data:", bookingData);
@@ -425,6 +440,70 @@ export default function BookingPage() {
         err instanceof Error
           ? err.message
           : "Booking creation failed. Please try again."
+      );
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
+  // Handle free event registration (no payment required)
+  const handleFreeEventRegistration = async () => {
+    setIsProcessingPayment(true);
+
+    try {
+      const selectedTicket = getSelectedTicket();
+      if (!selectedTicket) {
+        throw new Error("No ticket selected");
+      }
+
+      // Validate form before proceeding
+      if (!validateForm()) {
+        throw new Error("Please fill in all required fields correctly");
+      }
+
+      // Prepare booking data for free event - exact structure from your example
+      const bookingData = {
+        eventId: params.id,
+        ticketType: selectedTicket.name,
+        quantity,
+        attendeeInfo: attendees,
+      };
+
+      console.log("Creating free event booking with data:", bookingData);
+
+      // Create booking for free event
+      const bookingResponse = await apiRequest("/api/booking/free-event", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(bookingData),
+      });
+
+      console.log("Free event booking response:", bookingResponse);
+
+      if (bookingResponse.success) {
+        setBookingData(bookingResponse.data);
+        setBookingComplete(true);
+        console.log(
+          "Free event booking created successfully:",
+          bookingResponse.data
+        );
+
+        // Clear any previous errors
+        setError(null);
+      } else {
+        throw new Error(
+          bookingResponse.message || "Registration failed. Please try again."
+        );
+      }
+    } catch (err) {
+      console.error("Free event registration error:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Registration failed. Please try again."
       );
     } finally {
       setIsProcessingPayment(false);
@@ -1269,7 +1348,7 @@ export default function BookingPage() {
                 ) : selectedTicket?.isFree || selectedTicket?.price === 0 ? (
                   <div className="mb-6">
                     <button
-                      onClick={() => handlePaymentSuccess("FREE_EVENT")}
+                      onClick={handleFreeEventRegistration}
                       disabled={
                         isProcessingPayment || !isAttendeeFormComplete()
                       }

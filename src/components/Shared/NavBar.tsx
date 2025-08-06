@@ -8,7 +8,6 @@ import {
   X,
   Ticket,
   User,
-  Settings,
   LogOut,
   Heart,
   Calendar,
@@ -46,6 +45,7 @@ export function Navbar() {
     logout();
     setIsOpen(false);
     setDropdownOpen(false);
+    window.location.href = "/auth/signin"; // Redirect to sign-in page after logout
   };
 
   return (
@@ -153,7 +153,7 @@ export function Navbar() {
             {user && role === "organizer" && (
               <>
                 <Link
-                  href="/organizer/events"
+                  href="/my-events"
                   className={`font-medium transition-all duration-300 hover-scale ${
                     scrolled
                       ? "text-gray-300 hover:text-purple-400"
@@ -161,16 +161,6 @@ export function Navbar() {
                   }`}
                 >
                   My Events
-                </Link>
-                <Link
-                  href="/organizer/analytics"
-                  className={`font-medium transition-all duration-300 hover-scale ${
-                    scrolled
-                      ? "text-gray-300 hover:text-purple-400"
-                      : "text-white/90 hover:text-white"
-                  }`}
-                >
-                  Analytics
                 </Link>
               </>
             )}
@@ -186,16 +176,6 @@ export function Navbar() {
                   }`}
                 >
                   My Tickets
-                </Link>
-                <Link
-                  href="/favorites"
-                  className={`font-medium transition-all duration-300 hover-scale ${
-                    scrolled
-                      ? "text-gray-300 hover:text-purple-400"
-                      : "text-white/90 hover:text-white"
-                  }`}
-                >
-                  Favorites
                 </Link>
               </>
             )}
@@ -237,14 +217,6 @@ export function Navbar() {
                       >
                         <User className="mr-3 h-4 w-4" />
                         Profile
-                      </Link>
-                      <Link
-                        href="/settings"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover-translate transition-all duration-200"
-                        onClick={() => setDropdownOpen(false)}
-                      >
-                        <Settings className="mr-3 h-4 w-4" />
-                        Settings
                       </Link>
                     </div>
 
@@ -326,18 +298,6 @@ export function Navbar() {
                         View Profile
                       </Link>
 
-                      <Link
-                        href="/settings"
-                        className="flex items-center px-4 py-3 text-sm text-slate-300 hover:bg-slate-700/50 hover:text-white hover-translate transition-all duration-200"
-                        onClick={() => {
-                          setDropdownOpen(false);
-                          setIsOpen(false);
-                        }}
-                      >
-                        <Settings className="mr-3 h-4 w-4" />
-                        Settings
-                      </Link>
-
                       {role === "user" && (
                         <>
                           <Link
@@ -351,24 +311,14 @@ export function Navbar() {
                             <Ticket className="mr-3 h-4 w-4" />
                             My Tickets
                           </Link>
-                          <Link
-                            href="/favorites"
-                            className="flex items-center px-4 py-3 text-sm text-slate-300 hover:bg-slate-700/50 hover:text-white hover-translate transition-all duration-200"
-                            onClick={() => {
-                              setDropdownOpen(false);
-                              setIsOpen(false);
-                            }}
-                          >
-                            <Heart className="mr-3 h-4 w-4" />
-                            Favorites
-                          </Link>
+                          
                         </>
                       )}
 
                       {role === "organizer" && (
                         <>
                           <Link
-                            href="/organizer/events"
+                            href="/my-events"
                             className="flex items-center px-4 py-3 text-sm text-slate-300 hover:bg-slate-700/50 hover:text-white hover-translate transition-all duration-200"
                             onClick={() => {
                               setDropdownOpen(false);
@@ -377,17 +327,6 @@ export function Navbar() {
                           >
                             <Calendar className="mr-3 h-4 w-4" />
                             My Events
-                          </Link>
-                          <Link
-                            href="/organizer/analytics"
-                            className="flex items-center px-4 py-3 text-sm text-slate-300 hover:bg-slate-700/50 hover:text-white hover-translate transition-all duration-200"
-                            onClick={() => {
-                              setDropdownOpen(false);
-                              setIsOpen(false);
-                            }}
-                          >
-                            <BarChart3 className="mr-3 h-4 w-4" />
-                            Analytics
                           </Link>
                         </>
                       )}

@@ -415,8 +415,21 @@ export const useEventStore = create<EventState>()(
         set({ isLoading: true, error: null });
 
         try {
+          // Get auth token from localStorage or auth store
+          const authData = JSON.parse(
+            localStorage.getItem("auth-storage") || "{}"
+          );
+          const token = authData?.state?.token;
+
+          console.log("Creating event with data:", eventData);
+          console.log("Using token:", token ? "Token present" : "No token");
+
           const data = await apiRequest(API_CONFIG.ENDPOINTS.EVENTS.CREATE, {
             method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: token ? `Bearer ${token}` : "",
+            },
             body: JSON.stringify(eventData),
           });
 
@@ -429,6 +442,14 @@ export const useEventStore = create<EventState>()(
 
           return newEvent;
         } catch (error) {
+          console.error("Create event detailed error:", error);
+
+          // Enhanced error logging
+          if (error instanceof Error) {
+            console.error("Error message:", error.message);
+            console.error("Error stack:", error.stack);
+          }
+
           const errorMessage =
             error instanceof Error ? error.message : "Failed to create event";
           set({ error: errorMessage, isLoading: false });
@@ -474,8 +495,16 @@ export const useEventStore = create<EventState>()(
         set({ isLoading: true, error: null });
 
         try {
+          const authData = JSON.parse(
+            localStorage.getItem("auth-storage") || "{}"
+          );
+          const token = authData?.state?.token;
+
           await apiRequest(`${API_CONFIG.ENDPOINTS.EVENTS.DELETE}/${eventId}`, {
             method: "DELETE",
+            headers: {
+              Authorization: token ? `Bearer ${token}` : "",
+            },
           });
 
           set((state) => ({
@@ -516,6 +545,15 @@ export const useEventStore = create<EventState>()(
             }?${queryParams.toString()}`,
             {
               method: "GET",
+              headers: {
+                Authorization: (() => {
+                  const authData = JSON.parse(
+                    localStorage.getItem("auth-storage") || "{}"
+                  );
+                  const token = authData?.state?.token;
+                  return token ? `Bearer ${token}` : "";
+                })(),
+              },
             }
           );
 

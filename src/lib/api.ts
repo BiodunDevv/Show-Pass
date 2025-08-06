@@ -78,11 +78,23 @@ export const apiRequest = async (
     const data = await response.json();
 
     if (!response.ok) {
+      console.log("API Error Response:", data);
+      console.log("Response Status:", response.status);
+      console.log("Response Headers:", Object.fromEntries(response.headers));
+
       // Create more specific error messages based on status code
       let errorMessage =
         data.message || `API request failed: ${response.status}`;
 
-      if (response.status === 401) {
+      // For validation errors, include details
+      if (response.status === 400 && data.errors) {
+        console.log("Validation errors:", data.errors);
+        errorMessage = `Validation errors: ${JSON.stringify(data.errors)}`;
+      } else if (response.status === 400) {
+        errorMessage = `400: Bad Request - ${
+          data.message || "Invalid request data"
+        }`;
+      } else if (response.status === 401) {
         errorMessage = `401: Unauthorized - ${
           data.message || "Authentication required"
         }`;

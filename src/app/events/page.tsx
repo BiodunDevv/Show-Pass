@@ -18,9 +18,11 @@ import {
   Eye,
   Users,
   TrendingUp,
+  Plus,
 } from "lucide-react";
 import Image from "next/image";
 import { useEventStore } from "@/store/useEventStore";
+import { useAuthStore } from "@/store/useAuthStore";
 
 function EventsPageContent() {
   const searchParams = useSearchParams();
@@ -42,6 +44,8 @@ function EventsPageContent() {
     isLoading,
     error,
   } = useEventStore();
+
+  const { user } = useAuthStore();
 
   // Ensure we're on the client side and handle URL parameters
   useEffect(() => {
@@ -372,6 +376,31 @@ function EventsPageContent() {
                   ? "Browse through the results and find the perfect event for you."
                   : "From concerts to conferences, discover amazing events happening near you. Connect with your community and create lasting memories."}
               </p>
+
+              {/* Create Event Button for Organizers */}
+              {user?.role === "organizer" && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.15 }}
+                  className="mt-6"
+                >
+                  <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
+                    <Link href="/my-events/create">
+                      <button className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                        <Plus size={20} />
+                        Create Event
+                      </button>
+                    </Link>
+                    <Link href="/my-events">
+                      <button className="inline-flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-gray-200 rounded-xl font-medium border border-slate-600 transition-all duration-300">
+                        <LayoutGrid size={20} />
+                        My Events
+                      </button>
+                    </Link>
+                  </div>
+                </motion.div>
+              )}
             </motion.div>
 
             {/* Search and filters bar */}
