@@ -20,6 +20,9 @@ interface Statistics {
   eventsAttended: number;
   accountAge: string;
   lastActivity: string;
+}
+
+interface UserProfileExtended {
   verificationStatus: boolean;
   accountStatus: string;
   organizerMetrics?: {
@@ -96,6 +99,83 @@ interface AuthResponse {
   };
 }
 
+interface UserSettings {
+  notifications?: {
+    email?: boolean;
+    push?: boolean;
+    sms?: boolean;
+    newEvents?: boolean;
+    eventUpdates?: boolean;
+    eventReminders?: boolean;
+    promotions?: boolean;
+    newsletter?: boolean;
+    eventApprovals?: boolean;
+  };
+  preferences?: {
+    favoriteCategories?: string[];
+    eventNotificationRadius?: number;
+    autoAcceptBookings?: boolean;
+    showProfile?: boolean;
+    allowMessages?: boolean;
+    requireEventApproval?: boolean;
+    defaultEventPrivacy?: string;
+  };
+  privacy?: {
+    showEmail?: boolean;
+    showPhone?: boolean;
+    showAttendingEvents?: boolean;
+    showBusinessInfo?: boolean;
+    profileVisibility?: string;
+  };
+  theme?: string;
+  language?: string;
+  timezone?: string;
+}
+
+interface UpdateProfileData {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  bio?: string;
+  website?: string;
+  socialLinks?: {
+    twitter?: string;
+    facebook?: string;
+    instagram?: string;
+    linkedin?: string;
+  };
+  businessName?: string;
+  businessPhone?: string;
+  businessWebsite?: string;
+  businessAddress?: string;
+  businessType?: string;
+  department?: string;
+  position?: string;
+  employeeId?: string;
+  preferences?: {
+    favoriteCategories?: string[];
+    autoAcceptBookings?: boolean;
+    showProfile?: boolean;
+  };
+  notifications?: {
+    email?: boolean;
+    newEvents?: boolean;
+    eventUpdates?: boolean;
+    promotions?: boolean;
+  };
+}
+
+interface DeleteAccountData {
+  confirmPassword: string;
+  deleteType?: "soft" | "hard";
+  reason?: string;
+}
+
+interface ReactivateAccountData {
+  email: string;
+  password: string;
+}
+
 interface AuthState {
   user: User | null;
   userProfile: UserProfile | null;
@@ -114,6 +194,23 @@ interface AuthState {
 
   // Profile actions
   fetchUserProfile: () => Promise<UserProfile>;
+  updateUserProfile: (
+    data: UpdateProfileData
+  ) => Promise<{ success: boolean; message: string; data?: any }>;
+
+  // Settings actions
+  fetchUserSettings: () => Promise<UserSettings>;
+  updateUserSettings: (
+    settings: UserSettings
+  ) => Promise<{ success: boolean; message: string }>;
+
+  // Account management
+  deleteUserAccount: (
+    data: DeleteAccountData
+  ) => Promise<{ success: boolean; message: string }>;
+  reactivateAccount: (
+    data: ReactivateAccountData
+  ) => Promise<{ success: boolean; message: string; data?: any }>;
 
   // Password actions
   forgotPassword: (
@@ -371,6 +468,156 @@ export const useAuthStore = create<AuthState>()(
             error instanceof Error
               ? error.message
               : "Failed to fetch user profile";
+          set({ error: errorMessage, isLoading: false });
+          throw error;
+        }
+      },
+
+      updateUserProfile: async (profileData: UpdateProfileData) => {
+        set({ isLoading: true, error: null });
+
+        try {
+          const currentToken = get().token;
+          if (!currentToken) {
+            throw new Error("No authentication token found");
+          }
+
+          const data = await apiRequest("/api/auth/profile/comprehensive", {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${currentToken}`,
+            },
+            body: JSON.stringify(profileData),
+          });
+
+          set({ isLoading: false, error: null });
+
+          // Refresh user profile after update
+          await get().fetchUserProfile();
+
+          return data;
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : "Failed to update profile";
+          set({ error: errorMessage, isLoading: false });
+          throw error;
+        }
+      },
+
+      fetchUserSettings: async () => {
+        set({ isLoading: true, error: null });
+
+        try {
+          const currentToken = get().token;
+          if (!currentToken) {
+            throw new Error("No authentication token found");
+          }
+
+          const data = await apiRequest("/api/auth/settings", {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${currentToken}`,
+            },
+          });
+
+          set({ isLoading: false, error: null });
+          return data.data;
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : "Failed to fetch settings";
+          set({ error: errorMessage, isLoading: false });
+          throw error;
+        }
+      },
+
+      updateUserSettings: async (settings: UserSettings) => {
+        set({ isLoading: true, error: null });
+
+        try {
+          const currentToken = get().token;
+          if (!currentToken) {
+            throw new Error("No authentication token found");
+          }
+
+          const data = await apiRequest("/api/auth/settings", {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${currentToken}`,
+            },
+            body: JSON.stringify(settings),
+          });
+
+          set({ isLoading: false, error: null });
+          return data;
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : "Failed to update settings";
+          set({ error: errorMessage, isLoading: false });
+          throw error;
+        }
+      },
+
+      deleteUserAccount: async (deleteData: DeleteAccountData) => {
+        set({ isLoading: true, error: null });
+
+        try {
+          const currentToken = get().token;
+          if (!currentToken) {
+            throw new Error("No authentication token found");
+          }
+
+          const data = await apiRequest("/api/auth/account", {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${currentToken}`,
+            },
+            body: JSON.stringify(deleteData),
+          });
+
+          // Clear all auth data after successful deletion
+          get().logout();
+
+          set({ isLoading: false, error: null });
+          return data;
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : "Failed to delete account";
+          set({ error: errorMessage, isLoading: false });
+          throw error;
+        }
+      },
+
+      reactivateAccount: async (reactivateData: ReactivateAccountData) => {
+        set({ isLoading: true, error: null });
+
+        try {
+          const data = await apiRequest("/api/auth/reactivate", {
+            method: "POST",
+            body: JSON.stringify(reactivateData),
+          });
+
+          // Set auth data after successful reactivation
+          if (data.data && data.data.user && data.data.token) {
+            const { user, token } = data.data;
+            set({
+              user,
+              token,
+              role: user.role,
+              isLoading: false,
+              error: null,
+            });
+          } else {
+            set({ isLoading: false, error: null });
+          }
+
+          return data;
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : "Failed to reactivate account";
           set({ error: errorMessage, isLoading: false });
           throw error;
         }

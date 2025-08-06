@@ -331,7 +331,7 @@ export default function MyTicketsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
               <div
-                key={i}
+                key={`skeleton-${i}`}
                 className="bg-slate-800/50 rounded-xl p-6 animate-pulse"
               >
                 <div className="h-48 bg-slate-700 rounded-lg mb-4"></div>
@@ -434,7 +434,7 @@ export default function MyTicketsPage() {
                                 .slice(0, 2)
                                 .map((qr, index) => (
                                   <div
-                                    key={qr.attendeeId}
+                                    key={`${qr.attendeeId}-${index}`}
                                     className="text-gray-400"
                                   >
                                     • {qr.attendee.name}
@@ -547,7 +547,7 @@ export default function MyTicketsPage() {
                 const page = i + 1;
                 return (
                   <button
-                    key={page}
+                    key={`page-${page}`}
                     onClick={() => setCurrentPage(page)}
                     className={`w-10 h-10 rounded-lg font-medium transition-colors ${
                       currentPage === page
@@ -614,7 +614,10 @@ export default function MyTicketsPage() {
                     className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
                     {selectedBookingQRs.map((qr, index) => (
-                      <option key={qr.attendeeId} value={qr.qrCodeImage}>
+                      <option
+                        key={`${qr.attendeeId}-option-${index}`}
+                        value={qr.qrCodeImage}
+                      >
                         {qr.attendee.name} ({qr.attendee.email})
                       </option>
                     ))}
@@ -696,7 +699,7 @@ export default function MyTicketsPage() {
                 selectedBookingForDownload.individualQRs.length > 0 ? (
                   selectedBookingForDownload.individualQRs.map((qr, index) => (
                     <button
-                      key={qr.attendeeId}
+                      key={`${qr.attendeeId}-download-${index}`}
                       onClick={() => {
                         downloadQRCode(
                           qr.qrCodeImage,

@@ -3,7 +3,17 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuthStore } from "@/store/useAuthStore";
-import { Menu, X, User, Settings, LogOut, Ticket } from "lucide-react";
+import {
+  Menu,
+  X,
+  Ticket,
+  User,
+  Settings,
+  LogOut,
+  Heart,
+  Calendar,
+  BarChart3,
+} from "lucide-react";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -41,9 +51,7 @@ export function Navbar() {
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "backdrop-blur-sm shadow-lg"
-          : "bg-transparent"
+        scrolled ? "backdrop-blur-sm shadow-lg" : "bg-transparent"
       }`}
       style={{
         transform: "translateY(0)",
@@ -223,20 +231,21 @@ export function Navbar() {
 
                     <div className="py-1">
                       <Link
-                        href="/dashboard"
+                        href="/profile"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover-translate transition-all duration-200"
                         onClick={() => setDropdownOpen(false)}
                       >
                         <User className="mr-3 h-4 w-4" />
-                        Dashboard
+                        Profile
                       </Link>
-                      <button
-                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover-translate transition-all duration-200"
+                      <Link
+                        href="/settings"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover-translate transition-all duration-200"
                         onClick={() => setDropdownOpen(false)}
                       >
                         <Settings className="mr-3 h-4 w-4" />
                         Settings
-                      </button>
+                      </Link>
                     </div>
 
                     <div className="border-t border-gray-100">
@@ -269,27 +278,158 @@ export function Navbar() {
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center space-x-2">
+          {/* Mobile menu button and user avatar */}
+          <div className="md:hidden flex items-center space-x-3">
+            {user && (
+              <div className="relative" data-dropdown>
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className={`relative h-9 w-9 rounded-full transition-all duration-300 hover-scale ring-2 ring-white/20 hover:ring-white/40`}
+                >
+                  <div className="h-full w-full rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center">
+                    <span className="text-white font-semibold text-sm">
+                      {user.firstName?.charAt(0) || user.name?.charAt(0) || "U"}
+                    </span>
+                  </div>
+                </button>
+
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-64 bg-slate-800/95 backdrop-blur-md rounded-xl shadow-xl border border-slate-700/50 scale-in z-50">
+                    <div className="flex items-center justify-start gap-3 p-4 border-b border-slate-700/50">
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center">
+                        <span className="text-white font-semibold text-sm">
+                          {user.firstName?.charAt(0) ||
+                            user.name?.charAt(0) ||
+                            "U"}
+                        </span>
+                      </div>
+                      <div className="flex flex-col space-y-1 leading-none min-w-0">
+                        <p className="text-sm font-medium text-white truncate">
+                          {user.firstName} {user.lastName || user.name}
+                        </p>
+                        <p className="text-xs text-slate-400 truncate">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="py-2">
+                      <Link
+                        href="/profile"
+                        className="flex items-center px-4 py-3 text-sm text-slate-300 hover:bg-slate-700/50 hover:text-white hover-translate transition-all duration-200"
+                        onClick={() => {
+                          setDropdownOpen(false);
+                          setIsOpen(false);
+                        }}
+                      >
+                        <User className="mr-3 h-4 w-4" />
+                        View Profile
+                      </Link>
+
+                      <Link
+                        href="/settings"
+                        className="flex items-center px-4 py-3 text-sm text-slate-300 hover:bg-slate-700/50 hover:text-white hover-translate transition-all duration-200"
+                        onClick={() => {
+                          setDropdownOpen(false);
+                          setIsOpen(false);
+                        }}
+                      >
+                        <Settings className="mr-3 h-4 w-4" />
+                        Settings
+                      </Link>
+
+                      {role === "user" && (
+                        <>
+                          <Link
+                            href="/my-tickets"
+                            className="flex items-center px-4 py-3 text-sm text-slate-300 hover:bg-slate-700/50 hover:text-white hover-translate transition-all duration-200"
+                            onClick={() => {
+                              setDropdownOpen(false);
+                              setIsOpen(false);
+                            }}
+                          >
+                            <Ticket className="mr-3 h-4 w-4" />
+                            My Tickets
+                          </Link>
+                          <Link
+                            href="/favorites"
+                            className="flex items-center px-4 py-3 text-sm text-slate-300 hover:bg-slate-700/50 hover:text-white hover-translate transition-all duration-200"
+                            onClick={() => {
+                              setDropdownOpen(false);
+                              setIsOpen(false);
+                            }}
+                          >
+                            <Heart className="mr-3 h-4 w-4" />
+                            Favorites
+                          </Link>
+                        </>
+                      )}
+
+                      {role === "organizer" && (
+                        <>
+                          <Link
+                            href="/organizer/events"
+                            className="flex items-center px-4 py-3 text-sm text-slate-300 hover:bg-slate-700/50 hover:text-white hover-translate transition-all duration-200"
+                            onClick={() => {
+                              setDropdownOpen(false);
+                              setIsOpen(false);
+                            }}
+                          >
+                            <Calendar className="mr-3 h-4 w-4" />
+                            My Events
+                          </Link>
+                          <Link
+                            href="/organizer/analytics"
+                            className="flex items-center px-4 py-3 text-sm text-slate-300 hover:bg-slate-700/50 hover:text-white hover-translate transition-all duration-200"
+                            onClick={() => {
+                              setDropdownOpen(false);
+                              setIsOpen(false);
+                            }}
+                          >
+                            <BarChart3 className="mr-3 h-4 w-4" />
+                            Analytics
+                          </Link>
+                        </>
+                      )}
+                    </div>
+
+                    <div className="border-t border-slate-700/50 py-2">
+                      <button
+                        onClick={() => {
+                          handleLogout();
+                          setDropdownOpen(false);
+                          setIsOpen(false);
+                        }}
+                        className="flex items-center w-full px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 hover-translate transition-all duration-200"
+                      >
+                        <LogOut className="mr-3 h-4 w-4" />
+                        Sign Out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             <button
               onClick={() => {
                 setIsOpen(!isOpen);
                 setScrolled(true);
               }}
-              className={`p-2 rounded-full transition-colors duration-300 ${
+              className={`p-2.5 rounded-xl transition-all duration-300 backdrop-blur-sm border ${
                 scrolled
-                  ? "text-white hover:bg-slate-800"
-                  : "text-white hover:bg-white/10"
+                  ? "text-white hover:bg-slate-800/80 border-slate-700/50 bg-slate-800/50"
+                  : "text-white hover:bg-white/10 border-white/20 bg-white/5"
               }`}
             >
               {isOpen ? (
                 <X
-                  className="h-6 w-6"
+                  className="h-5 w-5"
                   style={{ animation: "fadeIn 0.2s ease-out" }}
                 />
               ) : (
                 <Menu
-                  className="h-6 w-6"
+                  className="h-5 w-5"
                   style={{ animation: "fadeIn 0.2s ease-out" }}
                 />
               )}

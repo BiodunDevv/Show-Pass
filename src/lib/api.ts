@@ -12,6 +12,10 @@ export const API_CONFIG = {
       VERIFY_EMAIL: "/api/auth/verify-email",
       RESEND_VERIFICATION: "/api/auth/resend-verification",
       RESEND_VERIFICATION_EMAIL: "/api/auth/resend-verification-email",
+      SETTINGS: "/api/auth/settings",
+      ACCOUNT: "/api/auth/account",
+      REACTIVATE: "/api/auth/reactivate",
+      PROFILE_COMPREHENSIVE: "/api/auth/profile/comprehensive",
     },
     USER: {
       PROFILE: "/api/user-details/profile",
