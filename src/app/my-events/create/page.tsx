@@ -786,7 +786,9 @@ export default function CreateEventPage() {
                         {currentStep > step.number ? (
                           <CheckCircle size={18} />
                         ) : (
-                          <span className="font-medium text-sm">{step.number}</span>
+                          <span className="font-medium text-sm">
+                            {step.number}
+                          </span>
                         )}
                       </div>
                       <div className="mt-2 text-center">
