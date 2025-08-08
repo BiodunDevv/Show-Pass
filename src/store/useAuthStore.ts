@@ -116,6 +116,16 @@ interface AuthResponse {
   };
 }
 
+interface CheckAuthResponse {
+  success: boolean;
+  message: string;
+  data: {
+    isAuthenticated: boolean;
+    user: User;
+    authStatus: string;
+  };
+}
+
 interface UserSettings {
   notifications?: {
     email?: boolean;
@@ -204,6 +214,7 @@ interface AuthState {
   // Auth actions
   login: (email: string, password: string) => Promise<AuthResponse>;
   register: (userData: RegisterData) => Promise<AuthResponse>;
+  checkAuth: () => Promise<CheckAuthResponse>;
   logout: () => void;
   setUser: (user: User) => void;
   setLoading: (loading: boolean) => void;
@@ -320,6 +331,70 @@ export const useAuthStore = create<AuthState>()(
           const errorMessage =
             error instanceof Error ? error.message : "Registration failed";
           set({ error: errorMessage, isLoading: false });
+          throw error;
+        }
+      },
+
+      checkAuth: async () => {
+        const currentToken = get().token;
+
+        // If no token, user is not authenticated
+        if (!currentToken) {
+          set({
+            user: null,
+            token: null,
+            role: null,
+            error: "No authentication token found",
+          });
+          throw new Error("No authentication token found");
+        }
+
+        set({ isLoading: true, error: null });
+
+        try {
+          const data: CheckAuthResponse = await apiRequest(
+            API_CONFIG.ENDPOINTS.AUTH.CHECK_AUTH,
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${currentToken}`,
+              },
+            }
+          );
+
+          if (data.success && data.data.isAuthenticated) {
+            // Update user data from the response
+            const { user } = data.data;
+            set({
+              user,
+              role: user.role,
+              isLoading: false,
+              error: null,
+            });
+          } else {
+            // Not authenticated, clear auth data
+            set({
+              user: null,
+              token: null,
+              role: null,
+              isLoading: false,
+              error: null,
+            });
+          }
+
+          return data;
+        } catch (error) {
+          // Clear auth data on error (invalid/expired token)
+          set({
+            user: null,
+            token: null,
+            role: null,
+            isLoading: false,
+            error:
+              error instanceof Error
+                ? error.message
+                : "Authentication check failed",
+          });
           throw error;
         }
       },

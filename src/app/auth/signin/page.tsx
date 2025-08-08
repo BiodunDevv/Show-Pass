@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
+import { handlePostLoginRedirect } from "@/lib/auth-utils";
 import Link from "next/link";
 import {
   Eye,
@@ -72,15 +73,18 @@ export default function SignInPage() {
 
     try {
       await login(email, password);
-      router.push("/");
+      // Use the redirect utility to handle post-login navigation
+      handlePostLoginRedirect(router);
     } catch (error) {
       console.error("Login failed:", error);
 
       // Check if it's a 403 error (email verification required)
       if (
         (error instanceof Error && error.message?.includes("403")) ||
-        (error instanceof Error && error.message?.toLowerCase().includes("verification")) ||
-        (error instanceof Error && error.message?.toLowerCase().includes("verify"))
+        (error instanceof Error &&
+          error.message?.toLowerCase().includes("verification")) ||
+        (error instanceof Error &&
+          error.message?.toLowerCase().includes("verify"))
       ) {
         // Redirect to verify page with email
         router.push(`/auth/verify?email=${encodeURIComponent(email)}`);

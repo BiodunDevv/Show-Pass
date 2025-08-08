@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
+import { LogoutModal } from "./LogoutModal";
 import {
   Menu,
   X,
@@ -12,13 +14,17 @@ import {
   Heart,
   Calendar,
   BarChart3,
+  LayoutGrid,
 } from "lucide-react";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const { user, role, logout } = useAuthStore();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const { user, role, logout, isLoading } = useAuthStore();
+  const router = useRouter();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -41,11 +47,30 @@ export function Navbar() {
     };
   }, [dropdownOpen]);
 
-  const handleLogout = () => {
-    logout();
-    setIsOpen(false);
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      logout();
+      setIsOpen(false);
+      setDropdownOpen(false);
+      setShowLogoutModal(false);
+
+      // Clear any stored redirect URLs
+      localStorage.removeItem("redirectAfterLogin");
+
+      // Small delay to show loading state, then redirect
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      router.push("/auth/signin");
+    } catch (error) {
+      console.error("Logout error:", error);
+      setIsLoggingOut(false);
+    }
+  };
+
+  const openLogoutModal = () => {
+    setShowLogoutModal(true);
     setDropdownOpen(false);
-    window.location.href = "/auth/signin"; // Redirect to sign-in page after logout
   };
 
   return (
@@ -222,7 +247,7 @@ export function Navbar() {
 
                     <div className="border-t border-gray-100">
                       <button
-                        onClick={handleLogout}
+                        onClick={openLogoutModal}
                         className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover-translate transition-all duration-200"
                       >
                         <LogOut className="mr-3 h-4 w-4" />
@@ -311,7 +336,6 @@ export function Navbar() {
                             <Ticket className="mr-3 h-4 w-4" />
                             My Tickets
                           </Link>
-                          
                         </>
                       )}
 
@@ -335,7 +359,7 @@ export function Navbar() {
                     <div className="border-t border-slate-700/50 py-2">
                       <button
                         onClick={() => {
-                          handleLogout();
+                          openLogoutModal();
                           setDropdownOpen(false);
                           setIsOpen(false);
                         }}
@@ -477,7 +501,7 @@ export function Navbar() {
                     Profile
                   </Link>
                   <button
-                    onClick={handleLogout}
+                    onClick={openLogoutModal}
                     className={`text-left font-medium transition-colors duration-300 hover-translate ${
                       scrolled
                         ? "text-gray-300 hover:text-purple-400"
@@ -521,6 +545,14 @@ export function Navbar() {
           onClick={() => setDropdownOpen(false)}
         />
       )}
+
+      {/* Logout Confirmation Modal */}
+      <LogoutModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+        isLoading={isLoggingOut}
+      />
     </nav>
   );
 }

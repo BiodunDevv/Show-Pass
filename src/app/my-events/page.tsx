@@ -27,8 +27,17 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useEventStore, type Event } from "@/store/useEventStore";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 export default function MyEventsPage() {
+  return (
+    <ProtectedRoute allowedRoles={["organizer"]} fallbackPath="/auth/signin">
+      <MyEventsContent />
+    </ProtectedRoute>
+  );
+}
+
+function MyEventsContent() {
   const router = useRouter();
   const { user, token } = useAuthStore();
   const { events, fetchOrganizerEvents, deleteEvent, isLoading, error } =
@@ -41,18 +50,6 @@ export default function MyEventsPage() {
   const [eventToDelete, setEventToDelete] = useState<Event | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const eventsPerPage = 6;
-
-  // Redirect if not organizer
-  useEffect(() => {
-    if (!user || !token) {
-      router.push("/auth/signin");
-      return;
-    }
-    if (user.role !== "organizer") {
-      router.push("/events");
-      return;
-    }
-  }, [user, token, router]);
 
   // Fetch organizer events
   useEffect(() => {
@@ -463,7 +460,7 @@ export default function MyEventsPage() {
                       </Link>
 
                       <Link
-                        href={`/my-event/${event._id}/edit`}
+                        href={`/my-events/${event._id}/edit`}
                         className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition-colors"
                         title="Edit Event"
                       >
