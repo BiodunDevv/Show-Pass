@@ -181,7 +181,7 @@ export function HeroSearch() {
       {/* Hero Background */}
       <div className="absolute inset-0">
         <Image
-          src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1920&h=1080&fit=crop"
+          src="./HeroImage.jpg"
           alt="Events Background"
           fill
           className="object-cover"

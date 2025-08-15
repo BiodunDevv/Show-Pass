@@ -461,10 +461,19 @@ export const useEventStore = create<EventState>()(
         set({ isLoading: true, error: null });
 
         try {
+          const authData = JSON.parse(
+            localStorage.getItem("auth-storage") || "{}"
+          );
+          const token = authData?.state?.token;
+
           const data = await apiRequest(
             `${API_CONFIG.ENDPOINTS.EVENTS.UPDATE}/${eventId}`,
             {
               method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: token ? `Bearer ${token}` : "",
+              },
               body: JSON.stringify(updateData),
             }
           );

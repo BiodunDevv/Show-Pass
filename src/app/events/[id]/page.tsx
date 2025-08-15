@@ -22,6 +22,7 @@ import {
   CheckCircle,
   Download,
   Search,
+  BarChart3,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -222,6 +223,11 @@ export default function EventDetailsPage() {
   };
 
   const openGoogleMaps = () => {
+    if (!user) {
+      router.push("/auth/signin");
+      return;
+    }
+
     if (!event) return;
     const { latitude, longitude } = event.venue.coordinates;
     const url = `https://www.google.com/maps?q=${latitude},${longitude}`;
@@ -238,8 +244,19 @@ export default function EventDetailsPage() {
       return;
     }
 
-    // Redirect to booking page
-    router.push(`/booking/${event._id}`);
+    if (!selectedTicket) {
+      alert("Please select a ticket type first");
+      return;
+    }
+
+    // Prevent organizers from booking their own events
+    if (isEventOrganizer) {
+      alert("You cannot book tickets for your own event");
+      return;
+    }
+
+    // Navigate to booking page with selected ticket
+    router.push(`/booking/${params.id}?ticketId=${selectedTicket}`);
   };
 
   const handleCopyEventUrl = async () => {
@@ -604,17 +621,47 @@ export default function EventDetailsPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <MapPin className="h-5 w-5 text-purple-400" />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 flex-1">
+                    <MapPin className="h-5 w-5 text-purple-400" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-400">Venue</p>
+                      <p className="text-white font-medium">
+                        {event.venue.name}
+                      </p>
+                      <p className="text-gray-300 text-sm">
+                        {event.venue.address}
+                      </p>
+                      <p className="text-gray-300 text-sm">
+                        {event.venue.city}, {event.venue.state}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Map Button */}
                   <div>
-                    <p className="text-sm text-gray-400">Venue</p>
-                    <p className="text-white font-medium">{event.venue.name}</p>
-                    <p className="text-gray-300 text-sm">
-                      {event.venue.address}
-                    </p>
-                    <p className="text-gray-300 text-sm">
-                      {event.venue.city}, {event.venue.state}
-                    </p>
+                    {user ? (
+                      <button
+                        onClick={openGoogleMaps}
+                        className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"
+                      >
+                        <Navigation className="h-4 w-4" />
+                        View Map
+                      </button>
+                    ) : (
+                      <div className="relative group">
+                        <button
+                          onClick={() => router.push("/auth/signin")}
+                          className="flex items-center gap-2 px-3 py-2 bg-slate-700 border-2 border-slate-600 text-gray-300 rounded-lg transition-all hover:border-purple-500/50 text-sm"
+                        >
+                          <Navigation className="h-4 w-4" />
+                          View Map
+                        </button>
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                          Sign in to view location
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -717,20 +764,6 @@ export default function EventDetailsPage() {
                         it while pending approval.
                       </p>
                     )}
-                    {event.accessContext && (
-                      <div className="flex gap-2 mt-3">
-                        {event.accessContext.canEdit && (
-                          <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs">
-                            Can Edit
-                          </span>
-                        )}
-                        {event.accessContext.canDelete && (
-                          <span className="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs">
-                            Can Delete
-                          </span>
-                        )}
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
@@ -820,14 +853,18 @@ export default function EventDetailsPage() {
                 <h2 className="text-xl sm:text-2xl font-bold text-white">
                   Location
                 </h2>
-                <button
-                  onClick={openGoogleMaps}
-                  className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm sm:text-base"
-                >
-                  <Navigation className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Open in Google Maps</span>
-                  <span className="sm:hidden">Maps</span>
-                </button>
+                {user && (
+                  <button
+                    onClick={openGoogleMaps}
+                    className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm sm:text-base"
+                  >
+                    <Navigation className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">
+                      Open in Google Maps
+                    </span>
+                    <span className="sm:hidden">Maps</span>
+                  </button>
+                )}
               </div>
 
               <div className="mb-4">
@@ -838,24 +875,61 @@ export default function EventDetailsPage() {
                 <p className="text-gray-300 text-sm">
                   {event.venue.city}, {event.venue.state}
                 </p>
-                <p className="text-gray-400 text-xs sm:text-sm mt-2">
-                  📍 Coordinates: {event.venue.coordinates.latitude},{" "}
-                  {event.venue.coordinates.longitude}
-                </p>
+                {user && (
+                  <p className="text-gray-400 text-xs sm:text-sm mt-2">
+                    📍 Coordinates: {event.venue.coordinates.latitude},{" "}
+                    {event.venue.coordinates.longitude}
+                  </p>
+                )}
               </div>
 
-              {/* Embedded Google Map - Responsive height */}
+              {/* Embedded Google Map - Conditional on Authentication */}
               <div className="h-60 sm:h-80 lg:h-96 rounded-lg overflow-hidden">
-                <iframe
-                  src={`https://maps.google.com/maps?q=${event.venue.coordinates.latitude},${event.venue.coordinates.longitude}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  className="rounded-lg"
-                />
+                {user ? (
+                  <iframe
+                    src={`https://maps.google.com/maps?q=${event.venue.coordinates.latitude},${event.venue.coordinates.longitude}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    className="rounded-lg"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-slate-700/50 border-2 border-dashed border-slate-600 rounded-lg flex flex-col items-center justify-center p-6 text-center">
+                    <div className="mb-4">
+                      <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                      <h3 className="text-lg font-semibold text-white mb-2">
+                        Map View Available
+                      </h3>
+                      <p className="text-gray-400 text-sm sm:text-base max-w-md">
+                        Sign in to view the interactive map and get directions
+                        to this event location.
+                      </p>
+                    </div>
+
+                    <div className="space-y-3 w-full max-w-sm">
+                      <Link
+                        href="/auth/signin"
+                        className="w-full py-3 px-4 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
+                      >
+                        <MapPin className="h-4 w-4" />
+                        Sign In to View Map
+                      </Link>
+
+                      <p className="text-gray-500 text-xs">
+                        New to ShowPass?{" "}
+                        <Link
+                          href="/auth/signup"
+                          className="text-purple-400 hover:text-purple-300 underline"
+                        >
+                          Create an account
+                        </Link>
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -958,94 +1032,235 @@ export default function EventDetailsPage() {
 
           {/* Sidebar - Responsive Layout */}
           <div className="order-1 xl:order-2 space-y-4 sm:space-y-6">
-            {" "}
-            {/* Ticket Selection */}
-            <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg p-4 sm:p-6">
-              <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">
-                {userEventPurchases.length > 0
-                  ? "Buy More Tickets"
-                  : "Select Tickets"}
-              </h3>
-              <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
-                {event.ticketTypes.map((ticket) => (
-                  <div
-                    key={ticket._id}
-                    className={`p-3 sm:p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                      selectedTicket === ticket._id
-                        ? "border-purple-500 bg-purple-500/10"
-                        : "border-slate-600 hover:border-slate-500"
-                    }`}
-                    onClick={() => setSelectedTicket(ticket._id)}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-semibold text-white text-sm sm:text-base">
-                        {ticket.name}
-                      </h4>
-                      <p className="text-base sm:text-lg font-bold text-purple-400">
-                        {formatPrice(ticket.price)}
-                      </p>
-                    </div>
-                    <p className="text-gray-300 text-xs sm:text-sm mb-2 sm:mb-3">
-                      {ticket.description}
-                    </p>
-
-                    {/* Availability */}
-                    <div className="flex justify-between items-center mb-2 sm:mb-3">
-                      <p className="text-gray-400 text-xs sm:text-sm">
-                        {ticket.quantity - ticket.sold} of {ticket.quantity}{" "}
-                        remaining
-                      </p>
-                      <div className="w-24 bg-slate-700 rounded-full h-2">
-                        <div
-                          className="bg-gradient-to-r from-green-500 to-green-400 h-2 rounded-full transition-all"
-                          style={{
-                            width: `${
-                              ((ticket.quantity - ticket.sold) /
-                                ticket.quantity) *
-                              100
-                            }%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    {ticket.benefits && ticket.benefits.length > 0 && (
-                      <div className="mt-3">
-                        <p className="text-gray-400 text-xs mb-2 font-medium">
-                          What's Included:
+            {/* Ticket Selection - Only show if user is NOT the organizer */}
+            {!isEventOrganizer && (
+              <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg p-4 sm:p-6">
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">
+                  {userEventPurchases.length > 0
+                    ? "Buy More Tickets"
+                    : "Select Tickets"}
+                </h3>
+                <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+                  {event.ticketTypes.map((ticket) => (
+                    <div
+                      key={ticket._id}
+                      className={`p-3 sm:p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                        selectedTicket === ticket._id
+                          ? "border-purple-500 bg-purple-500/10"
+                          : "border-slate-600 hover:border-slate-500"
+                      }`}
+                      onClick={() => setSelectedTicket(ticket._id)}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-semibold text-white text-sm sm:text-base">
+                          {ticket.name}
+                        </h4>
+                        <p className="text-base sm:text-lg font-bold text-purple-400">
+                          {formatPrice(ticket.price)}
                         </p>
-                        <ul className="text-gray-300 text-xs space-y-1">
-                          {ticket.benefits.map((benefit, index) => (
-                            <li key={index} className="flex items-center gap-2">
-                              <Badge className="h-3 w-3 text-green-400 flex-shrink-0" />
-                              <span>{benefit}</span>
-                            </li>
-                          ))}
-                        </ul>
                       </div>
+                      <p className="text-gray-300 text-xs sm:text-sm mb-2 sm:mb-3">
+                        {ticket.description}
+                      </p>
+
+                      {/* Availability */}
+                      <div className="flex justify-between items-center mb-2 sm:mb-3">
+                        <p className="text-gray-400 text-xs sm:text-sm">
+                          {ticket.quantity - ticket.sold} of {ticket.quantity}{" "}
+                          remaining
+                        </p>
+                        <div className="w-24 bg-slate-700 rounded-full h-2">
+                          <div
+                            className="bg-gradient-to-r from-green-500 to-green-400 h-2 rounded-full transition-all"
+                            style={{
+                              width: `${
+                                ((ticket.quantity - ticket.sold) /
+                                  ticket.quantity) *
+                                100
+                              }%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {ticket.benefits && ticket.benefits.length > 0 && (
+                        <div className="mt-3">
+                          <p className="text-gray-400 text-xs mb-2 font-medium">
+                            What's Included:
+                          </p>
+                          <ul className="text-gray-300 text-xs space-y-1">
+                            {ticket.benefits.map((benefit, index) => (
+                              <li
+                                key={index}
+                                className="flex items-center gap-2"
+                              >
+                                <Badge className="h-3 w-3 text-green-400 flex-shrink-0" />
+                                <span>{benefit}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Booking Actions - Only show booking actions if NOT organizer */}
+                {event.statusInfo?.isPending ? (
+                  <div className="space-y-4">
+                    <div className="text-center p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                      <div className="flex items-center justify-center gap-2 mb-2">
+                        <Clock className="h-5 w-5 text-yellow-400" />
+                        <p className="text-yellow-300 font-semibold">
+                          Event Pending Approval
+                        </p>
+                      </div>
+                      <p className="text-gray-400 text-sm">
+                        This event is currently under review and tickets are not
+                        yet available for purchase.
+                      </p>
+                    </div>
+                  </div>
+                ) : user && user.role === "organizer" ? (
+                  // Organizers can book other people's events (this section only shows for non-organizers now)
+                  <div className="space-y-4">
+                    <div className="text-center p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                      <div className="flex items-center justify-center gap-2 mb-2">
+                        <Ticket className="h-4 w-4 text-green-400" />
+                        <p className="text-green-300 font-medium text-sm">
+                          Organizer Booking
+                        </p>
+                      </div>
+                      <p className="text-gray-400 text-xs">
+                        You can book tickets for other organizers' events
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleBooking}
+                      disabled={!selectedTicket}
+                      className="w-full py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2 disabled:scale-100"
+                    >
+                      <Ticket className="h-5 w-5" />
+                      {selectedTicket
+                        ? "Book Selected Ticket"
+                        : "Select a Ticket First"}
+                    </button>
+                  </div>
+                ) : user ? (
+                  // Regular users
+                  <div className="space-y-4">
+                    <button
+                      onClick={handleBooking}
+                      disabled={!selectedTicket}
+                      className="w-full py-4 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2 disabled:scale-100"
+                    >
+                      <Ticket className="h-5 w-5" />
+                      {selectedTicket
+                        ? "Book Selected Ticket"
+                        : "Select a Ticket First"}
+                    </button>
+                    {!selectedTicket && (
+                      <p className="text-center text-gray-400 text-xs">
+                        👆 Choose a ticket type above to continue
+                      </p>
                     )}
                   </div>
-                ))}
-              </div>
-              {/* Booking Actions */}
-              {isEventOrganizer ? (
-                <div className="space-y-4">
-                  <div className="text-center p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <Star className="h-5 w-5 text-blue-400" />
-                      <p className="text-blue-300 font-semibold">
-                        You're the Organizer
+                ) : (
+                  <div className="space-y-4">
+                    <div className="text-center p-4 bg-slate-700/50 rounded-lg border border-slate-600">
+                      <p className="text-gray-300 text-sm mb-2">
+                        🎫 Ready to join this amazing event?
+                      </p>
+                      <p className="text-gray-400 text-xs">
+                        Sign in to book your tickets and secure your spot
                       </p>
                     </div>
-                    <p className="text-gray-400 text-sm">
-                      {event.statusInfo?.isPending
-                        ? "Your event is pending approval. Once approved, users can purchase tickets."
-                        : "This is your event. Users can purchase tickets once it's approved."}
+                    <Link
+                      href="/auth/signin"
+                      className="w-full py-4 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105 text-center flex items-center justify-center gap-2"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      Sign In to Book Tickets
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Event Organizer Dashboard - Only show if user IS the organizer */}
+            {isEventOrganizer && (
+              <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg p-4 sm:p-6">
+                <div className="text-center p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg mb-4">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <Star className="h-5 w-5 text-blue-400" />
+                    <p className="text-blue-300 font-semibold">
+                      You're the Organizer
                     </p>
                   </div>
-                  <div className="bg-slate-700/30 rounded-lg p-4">
-                    <h4 className="text-white font-medium mb-3">Event Stats</h4>
-                    <div className="grid grid-cols-2 gap-4 text-center">
+                  <p className="text-gray-400 text-sm">
+                    Manage your event and view ticket sales analytics below.
+                  </p>
+                </div>
+
+                {/* Detailed Ticket Analytics for Organizers */}
+                <div className="bg-slate-700/30 rounded-lg p-4">
+                  <h4 className="text-white font-medium mb-3 flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4" />
+                    Ticket Sales Overview
+                  </h4>
+
+                  <div className="space-y-3 mb-4">
+                    {event.ticketTypes.map((ticket) => (
+                      <div
+                        key={ticket._id}
+                        className="bg-slate-600/30 rounded-lg p-3"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h5 className="text-white font-medium text-sm">
+                              {ticket.name}
+                            </h5>
+                            <p className="text-gray-400 text-xs">
+                              {formatPrice(ticket.price)}{" "}
+                              {ticket.isFree ? "(Free)" : ""}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-green-400 font-semibold text-sm">
+                              {ticket.sold}/{ticket.quantity}
+                            </p>
+                            <p className="text-gray-400 text-xs">sold</p>
+                          </div>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="w-full bg-slate-700 rounded-full h-2 mb-2">
+                          <div
+                            className="bg-gradient-to-r from-green-500 to-green-400 h-2 rounded-full transition-all duration-300"
+                            style={{
+                              width: `${
+                                (ticket.sold / ticket.quantity) * 100
+                              }%`,
+                            }}
+                          />
+                        </div>
+
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-400">
+                            {ticket.quantity - ticket.sold} remaining
+                          </span>
+                          <span className="text-gray-400">
+                            {Math.round((ticket.sold / ticket.quantity) * 100)}%
+                            sold
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Overall Stats */}
+                  <div className="border-t border-slate-600 pt-3">
+                    <div className="grid grid-cols-3 gap-4 text-center">
                       <div>
                         <p className="text-lg font-bold text-green-400">
                           {event.ticketTypes.reduce(
@@ -1053,94 +1268,52 @@ export default function EventDetailsPage() {
                             0
                           )}
                         </p>
-                        <p className="text-xs text-gray-400">Sold</p>
+                        <p className="text-xs text-gray-400">Total Sold</p>
                       </div>
                       <div>
                         <p className="text-lg font-bold text-yellow-400">
                           {event.ticketTypes.reduce(
-                            (sum, ticket) => sum + ticket.quantity,
+                            (sum, ticket) =>
+                              sum + (ticket.quantity - ticket.sold),
                             0
-                          ) -
-                            event.ticketTypes.reduce(
-                              (sum, ticket) => sum + ticket.sold,
-                              0
-                            )}
+                          )}
                         </p>
-                        <p className="text-xs text-gray-400">Remaining</p>
+                        <p className="text-xs text-gray-400">Available</p>
+                      </div>
+                      <div>
+                        <p className="text-lg font-bold text-purple-400">
+                          {formatPrice(
+                            event.ticketTypes.reduce(
+                              (sum, ticket) => sum + ticket.sold * ticket.price,
+                              0
+                            )
+                          )}
+                        </p>
+                        <p className="text-xs text-gray-400">Revenue</p>
                       </div>
                     </div>
                   </div>
                 </div>
-              ) : event.statusInfo?.isPending ? (
-                <div className="space-y-4">
-                  <div className="text-center p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <Clock className="h-5 w-5 text-yellow-400" />
-                      <p className="text-yellow-300 font-semibold">
-                        Event Pending Approval
-                      </p>
-                    </div>
-                    <p className="text-gray-400 text-sm">
-                      This event is currently under review and tickets are not
-                      yet available for purchase.
-                    </p>
-                  </div>
-                </div>
-              ) : user && user.role === "organizer" ? (
-                <div className="space-y-4">
-                  <div className="text-center p-4 bg-orange-500/10 border border-orange-500/30 rounded-lg">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <Badge className="h-5 w-5 text-orange-400" />
-                      <p className="text-orange-300 font-semibold">
-                        Organizer Account
-                      </p>
-                    </div>
-                    <p className="text-gray-400 text-sm">
-                      You need a user account to purchase tickets. Organizers
-                      can only view events.
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-gray-400 text-xs mb-3">
-                      Want to attend this event?
-                    </p>
-                    <Link
-                      href="/auth/signup"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium rounded-lg transition-all duration-300"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      Create User Account
-                    </Link>
-                  </div>
-                </div>
-              ) : user ? (
-                <button
-                  onClick={handleBooking}
-                  className="w-full py-4 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
-                >
-                  <Ticket className="h-5 w-5" />
-                  Book Tickets
-                </button>
-              ) : (
-                <div className="space-y-4">
-                  <div className="text-center p-4 bg-slate-700/50 rounded-lg border border-slate-600">
-                    <p className="text-gray-300 text-sm mb-2">
-                      🎫 Ready to join this amazing event?
-                    </p>
-                    <p className="text-gray-400 text-xs">
-                      Sign in to book your tickets and secure your spot
-                    </p>
-                  </div>
+
+                {/* Event Management Links */}
+                <div className="space-y-2 mt-4">
                   <Link
-                    href="/auth/signin"
-                    className="w-full py-4 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105 text-center flex items-center justify-center gap-2"
+                    href={`/organizer/events/${event._id}/manage`}
+                    className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium"
                   >
-                    <ExternalLink className="h-4 w-4" />
-                    Sign In to Book Tickets
+                    <BarChart3 className="h-4 w-4" />
+                    Manage Event
                   </Link>
+                  <button
+                    onClick={openAttendeesSidebar}
+                    className="w-full py-2 px-4 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+                  >
+                    <Users className="h-4 w-4" />
+                    View Attendees ({event.currentAttendees})
+                  </button>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
             {/* Organizer Info */}
             <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg p-4 sm:p-6">
               <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">

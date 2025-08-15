@@ -423,7 +423,7 @@ function EventsPageContent() {
                     placeholder="Search events..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 sm:pl-12 pr-10 sm:pr-12 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border border-[#2E313C] focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 text-gray-200 bg-[#1E2132]/70 backdrop-blur-sm shadow-lg placeholder-gray-500 transition-all duration-300 text-sm sm:text-base"
+                    className="w-full pl-10 sm:pl-12 pr-10 sm:pr-12 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border border-[#2E313C] focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 text-gray-200 bg-slate-800/50/70 backdrop-blur-sm shadow-lg placeholder-gray-500 transition-all duration-300 text-sm sm:text-base"
                   />
                   {searchQuery && (
                     <motion.button
@@ -444,7 +444,7 @@ function EventsPageContent() {
                     className={`flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border transition-all duration-300 w-full sm:w-auto text-sm sm:text-base ${
                       isFilterMenuOpen || selectedTags.length > 0
                         ? "border-purple-500 bg-purple-900/30 text-purple-300 shadow-lg shadow-purple-900/20"
-                        : "border-[#2E313C] bg-[#1E2132]/70 text-gray-300 hover:bg-[#2E313C]/80 hover:border-purple-500/30"
+                        : "border-[#2E313C] bg-slate-800/50/70 text-gray-300 hover:bg-[#2E313C]/80 hover:border-purple-500/30"
                     }`}
                   >
                     <SlidersHorizontal size={14} />
@@ -464,7 +464,7 @@ function EventsPageContent() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute top-full mt-2 right-0 sm:left-0 bg-[#1E2132] rounded-xl shadow-lg border border-[#2E313C] w-64 sm:w-72 z-20 overflow-hidden"
+                        className="absolute top-full mt-2 right-0 sm:left-0 bg-slate-800/50 rounded-xl shadow-lg border border-[#2E313C] w-64 sm:w-72 z-20 overflow-hidden"
                       >
                         <div className="p-3 sm:p-4">
                           <div className="flex items-center justify-between">
@@ -530,7 +530,7 @@ function EventsPageContent() {
                       className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 whitespace-nowrap ${
                         selectedCategory === category.id
                           ? "border border-purple-500 bg-purple-900/30 text-purple-300 shadow-lg shadow-purple-900/20"
-                          : "bg-[#2E313C]/50 text-gray-300 hover:bg-[#2E313C]/80 hover:text-white border border-[#3E4154]/50"
+                          : "bg-slate-800/50 text-gray-300 hover:bg-[#2E313C]/80 hover:text-white border border-[#3E4154]/50"
                       }`}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -572,7 +572,7 @@ function EventsPageContent() {
                       className={`relative flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                         selectedCategory === category.id
                           ? "border border-purple-500 bg-purple-900/30 text-purple-300 shadow-lg shadow-purple-900/20"
-                          : "bg-[#2E313C]/50 text-gray-300 hover:bg-[#2E313C]/80 hover:text-white border border-[#3E4154]/50 hover:border-purple-500/30"
+                          : "bg-slate-800/50 text-gray-300 hover:bg-[#2E313C]/80 hover:text-white border border-[#3E4154]/50 hover:border-purple-500/30"
                       }`}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -609,7 +609,7 @@ function EventsPageContent() {
                             .slice(6)
                             .some((cat) => cat.id === selectedCategory)
                             ? "border border-purple-500 bg-purple-900/30 text-purple-300 shadow-lg shadow-purple-900/20"
-                            : "bg-[#2E313C]/50 text-gray-300 hover:bg-[#2E313C]/80 hover:text-white border border-[#3E4154]/50 hover:border-purple-500/30"
+                            : "bg-slate-800/50 text-gray-300 hover:bg-[#2E313C]/80 hover:text-white border border-[#3E4154]/50 hover:border-purple-500/30"
                         }`}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
@@ -629,7 +629,7 @@ function EventsPageContent() {
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 10, scale: 0.95 }}
                             transition={{ duration: 0.2 }}
-                            className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 bg-[#1E2132] rounded-xl shadow-xl border border-[#2E313C] min-w-[200px] z-30 overflow-hidden"
+                            className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 bg-slate-800/50 rounded-xl shadow-xl border border-[#2E313C] min-w-[200px] z-30 overflow-hidden"
                           >
                             <div className="p-3">
                               <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2 px-1">
@@ -724,7 +724,7 @@ function EventsPageContent() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="bg-[#1E2132] rounded-xl border border-[#2E313C] p-6 sm:p-8 py-12 sm:py-20 flex flex-col items-center text-center shadow-md mx-3 sm:mx-0"
+              className="bg-slate-800/50 rounded-xl border border-[#2E313C] p-6 sm:p-8 py-12 sm:py-20 flex flex-col items-center text-center shadow-md mx-3 sm:mx-0"
             >
               <Search className="w-8 h-8 sm:w-12 sm:h-12 text-red-400 mb-3" />
               <h3 className="text-lg sm:text-xl font-medium text-red-300 mb-2">
@@ -751,7 +751,7 @@ function EventsPageContent() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="bg-[#1E2132] rounded-xl border border-[#2E313C] p-6 sm:p-8 py-12 sm:py-20 flex flex-col items-center text-center shadow-md mx-3 sm:mx-0"
+              className="bg-slate-800/50 rounded-xl border border-[#2E313C] p-6 sm:p-8 py-12 sm:py-20 flex flex-col items-center text-center shadow-md mx-3 sm:mx-0"
             >
               <Search className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400 mb-3" />
               <h3 className="text-lg sm:text-xl font-medium text-gray-200 mb-2">
@@ -789,8 +789,7 @@ function EventsPageContent() {
                     key={event._id}
                     onMouseEnter={() => setIsEventHovered(event._id)}
                     onMouseLeave={() => setIsEventHovered(null)}
-                    className="group relative bg-[#1E2132] rounded-xl sm:rounded-2xl overflow-hidden transition-all duration-300 transform 
-                         backdrop-blur-sm"
+                    className="group relative bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl overflow-hidden hover:border-purple-500/50 transition-all duration-300"
                   >
                     {/* Event card */}
                     <div className="h-full flex flex-col relative overflow-hidden">
@@ -1067,7 +1066,7 @@ function EventsPageContent() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
               transition={{ delay: 1, duration: 0.5 }}
-              className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 bg-[#1E2132]/90 backdrop-blur-md border border-[#2E313C] rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-4 max-w-xs sm:max-w-sm flex items-start z-30"
+              className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 bg-slate-800/50/90 backdrop-blur-md border border-[#2E313C] rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-4 max-w-xs sm:max-w-sm flex items-start z-30"
             >
               <Sparkles
                 className="text-purple-400 mr-2 sm:mr-3 mt-0.5 flex-shrink-0"

@@ -24,6 +24,7 @@ import {
   Star,
   ChevronLeft,
   ChevronRight,
+  FilePenLine,
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useEventStore, type Event } from "@/store/useEventStore";
@@ -461,10 +462,10 @@ function MyEventsContent() {
 
                       <Link
                         href={`/my-events/${event._id}/edit`}
-                        className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition-colors"
+                        className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2" 
                         title="Edit Event"
                       >
-                        <Edit size={16} />
+                        <FilePenLine size={16} />
                       </Link>
 
                       {/* Only show delete button if no tickets have been sold */}

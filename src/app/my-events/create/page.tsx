@@ -624,11 +624,6 @@ export default function CreateEventPage() {
 
   return (
     <div className="min-h-screen bg-slate-900 relative overflow-hidden">
-      {/* Background Effects - matching events page */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-slate-900 to-blue-900/20" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
-
       {/* Success Message */}
       <AnimatePresence>
         {successMessage && (
@@ -645,7 +640,7 @@ export default function CreateEventPage() {
       </AnimatePresence>
 
       <div className="relative z-10 pt-20 sm:pt-24 pb-8 sm:pb-12">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4">
+        <div className="max-w-9xl mx-auto px-2 sm:px-4">
           {/* Header section - matching events page style */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -694,7 +689,7 @@ export default function CreateEventPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <div className="flex items-center gap-1 p-1 bg-[#1E2132]/80 backdrop-blur-sm border border-[#2E313C] rounded-xl w-full max-w-md sm:w-auto">
+            <div className="flex items-center gap-1 p-1 bg-slate-800/50 backdrop-blur-sm border border-[#2E313C] rounded-xl w-full max-w-md sm:w-auto">
               <button
                 onClick={() => setIsFreeEvent(false)}
                 className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-medium transition-all duration-300 text-sm sm:text-base flex-1 sm:flex-initial ${
@@ -871,7 +866,7 @@ export default function CreateEventPage() {
 
           {/* Form Content - Fully responsive design */}
           <motion.div
-            className="bg-[#1E2132]/80 backdrop-blur-sm border border-[#2E313C] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-xl mx-2 sm:mx-0"
+            className="bg-slate-800/50 backdrop-blur-sm border border-[#2E313C] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-xl mx-2 sm:mx-0"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}

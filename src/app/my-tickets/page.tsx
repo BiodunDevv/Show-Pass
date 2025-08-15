@@ -350,8 +350,6 @@ export default function MyTicketsPage() {
         {/* Tickets Grid */}
         {!isLoading && filteredBookings.length > 0 && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
           >
@@ -361,8 +359,8 @@ export default function MyTicketsPage() {
               return (
                 <motion.div
                   key={booking.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ y: 20 }}
+                  animate={{ y: 0 }}
                   whileHover={{ y: -5 }}
                   className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl overflow-hidden hover:border-purple-500/50 transition-all duration-300"
                 >

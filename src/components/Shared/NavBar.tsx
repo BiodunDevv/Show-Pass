@@ -432,7 +432,7 @@ export function Navbar() {
               {user && role === "organizer" && (
                 <>
                   <Link
-                    href="/organizer/events"
+                    href="/my-events"
                     className={`font-medium transition-colors duration-300 hover-translate ${
                       scrolled
                         ? "text-gray-300 hover:text-purple-400"
@@ -441,17 +441,6 @@ export function Navbar() {
                     onClick={() => setIsOpen(false)}
                   >
                     My Events
-                  </Link>
-                  <Link
-                    href="/organizer/analytics"
-                    className={`font-medium transition-colors duration-300 hover-translate ${
-                      scrolled
-                        ? "text-gray-300 hover:text-purple-400"
-                        : "text-white/90 hover:text-white"
-                    }`}
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Analytics
                   </Link>
                 </>
               )}
@@ -468,17 +457,6 @@ export function Navbar() {
                     onClick={() => setIsOpen(false)}
                   >
                     My Tickets
-                  </Link>
-                  <Link
-                    href="/favorites"
-                    className={`font-medium transition-colors duration-300 hover-translate ${
-                      scrolled
-                        ? "text-gray-300 hover:text-purple-400"
-                        : "text-white/90 hover:text-white"
-                    }`}
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Favorites
                   </Link>
                 </>
               )}

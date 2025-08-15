@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ConditionalNavbar } from "@/components/ConditionalNavbar";
+import { NetworkStatus } from "@/components/Shared/NetworkStatus";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,23 +34,24 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <NetworkStatus />
+        
+        {/* Conditional Navbar that hides on auth pages */}
         <ConditionalNavbar />
         {/* Main content of the page */}
         {children}
-        
-        
-        
+
         <ToastContainer
-          position="top-right"
+          position="bottom-center"
           autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop={false}
+          hideProgressBar={true}
+          newestOnTop={true}
           closeOnClick
           rtl={false}
           pauseOnFocusLoss
           draggable
           pauseOnHover
-          theme="dark"
+          theme="light"
         />
       </body>
     </html>

@@ -264,7 +264,7 @@ export default function BlogPage() {
                     placeholder="Search articles..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 sm:pl-12 pr-10 sm:pr-12 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border border-[#2E313C] focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 text-gray-200 bg-[#1E2132]/70 backdrop-blur-sm shadow-lg placeholder-gray-500 transition-all duration-300 text-sm sm:text-base"
+                    className="w-full pl-10 sm:pl-12 pr-10 sm:pr-12 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border border-[#2E313C] focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 text-gray-200 bg-slate-800/50 backdrop-blur-sm shadow-lg placeholder-gray-500 transition-all duration-300 text-sm sm:text-base"
                   />
                   {searchQuery && (
                     <motion.button
@@ -285,7 +285,7 @@ export default function BlogPage() {
                     className={`flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border transition-all duration-300 w-full sm:w-auto text-sm sm:text-base ${
                       isFilterMenuOpen || selectedTags.length > 0
                         ? "border border-purple-500 bg-purple-900/30 text-purple-300 shadow-lg shadow-purple-900/20"
-                        : "border-[#2E313C] bg-[#1E2132]/70 text-gray-300 hover:bg-[#2E313C]/80 hover:border-purple-500/30"
+                        : "border-[#2E313C] bg-slate-800/50 text-gray-300 hover:bg-[#2E313C]/80 hover:border-purple-500/30"
                     }`}
                   >
                     <SlidersHorizontal size={14} />
@@ -370,7 +370,7 @@ export default function BlogPage() {
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 whitespace-nowrap ${
                         selectedCategory === category.id
                           ? "border border-purple-500 bg-purple-900/30 text-purple-300 shadow-lg shadow-purple-900/20"
-                          : "bg-[#2E313C]/50 text-gray-300 hover:bg-[#2E313C]/80 hover:text-white border border-[#3E4154]/50"
+                          : "bg-slate-800/50 text-gray-300 hover:bg-[#2E313C]/80 hover:text-white border border-[#3E4154]/50"
                       }`}
                     >
                       <span role="img" aria-label={category.name}>
@@ -398,7 +398,7 @@ export default function BlogPage() {
                         onClick={() =>
                           setIsCategoryDropdownOpen(!isCategoryDropdownOpen)
                         }
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 bg-[#2E313C]/50 text-gray-300 hover:bg-[#2E313C]/80 hover:text-white border border-[#3E4154]/50 whitespace-nowrap"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 bg-slate-800/50 text-gray-300 hover:bg-[#2E313C]/80 hover:text-white border border-[#3E4154]/50 whitespace-nowrap"
                       >
                         <span>More</span>
                         <svg
@@ -471,7 +471,7 @@ export default function BlogPage() {
                     className={`relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                       selectedCategory === category.id
                         ? "border border-purple-500 bg-purple-900/30 text-purple-300 shadow-lg shadow-purple-900/20"
-                        : "bg-[#2E313C]/50 text-gray-300 hover:bg-[#2E313C]/80 hover:text-white border border-[#3E4154]/50 hover:border-purple-500/30"
+                        : "bg-slate-800/50 text-gray-300 hover:bg-[#2E313C]/80 hover:text-white border border-[#3E4154]/50 hover:border-purple-500/30"
                     }`}
                   >
                     <span role="img" aria-label={category.name}>
@@ -500,7 +500,7 @@ export default function BlogPage() {
                       className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                         isCategoryDropdownOpen
                           ? "border border-purple-500 bg-purple-900/30 text-purple-300 shadow-lg shadow-purple-900/20"
-                          : "bg-[#2E313C]/50 text-gray-300 hover:bg-[#2E313C]/80 hover:text-white border border-[#3E4154]/50 hover:border-purple-500/30"
+                          : "bg-slate-800/50 text-gray-300 hover:bg-[#2E313C]/80 hover:text-white border border-[#3E4154]/50 hover:border-purple-500/30"
                       }`}
                     >
                       <LayoutGrid size={16} />
@@ -656,7 +656,7 @@ export default function BlogPage() {
                   key={article._id}
                   onMouseEnter={() => setIsArticleHovered(article._id)}
                   onMouseLeave={() => setIsArticleHovered(null)}
-                  className="group relative bg-[#1E2132] rounded-xl sm:rounded-2xl overflow-hidden border border-[#2E313C] 
+                  className="group relative bg-slate-800/50 rounded-xl sm:rounded-2xl overflow-hidden border border-[#2E313C] 
                        transition-all duration-300 transform 
                        backdrop-blur-sm"
                 >
@@ -835,7 +835,7 @@ export default function BlogPage() {
             filteredArticles.length > 0 &&
             totalPages > 1 && (
               <div className="flex justify-center mt-8 sm:mt-12">
-                <div className="flex items-center gap-1 sm:gap-2 bg-[#1E2132]/70 backdrop-blur-sm border border-[#2E313C] rounded-xl p-2">
+                <div className="flex items-center gap-1 sm:gap-2 bg-slate-800/50 backdrop-blur-sm border border-[#2E313C] rounded-xl p-2">
                   {/* Previous button */}
                   <motion.button
                     onClick={() => handlePageChange(currentPage - 1)}
@@ -939,7 +939,7 @@ export default function BlogPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
               transition={{ delay: 1, duration: 0.5 }}
-              className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 bg-[#1E2132]/90 backdrop-blur-md border border-[#2E313C] rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-4 max-w-xs sm:max-w-sm flex items-start z-30"
+              className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 bg-slate-800/50 backdrop-blur-md border border-[#2E313C] rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-4 max-w-xs sm:max-w-sm flex items-start z-30"
             >
               <Sparkles
                 className="text-purple-400 mr-2 sm:mr-3 mt-0.5 flex-shrink-0"
