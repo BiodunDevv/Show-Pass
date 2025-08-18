@@ -32,6 +32,7 @@ export const API_CONFIG = {
       DELETE: "/api/events",
       GET_ORGANIZER_EVENTS: "/api/events/organizer",
       GET_ATTENDEES: "/api/events",
+      GET_ALL_ATTENDEES: "/api/events",
     },
     ARTICLES: {
       GET_ALL: "/api/articles",
@@ -53,6 +54,7 @@ export const API_CONFIG = {
       FREE_EVENT: "/api/booking/free-event",
       CHECK_IN: "/api/booking",
       VERIFY_QR: "/api/booking/verify-qr",
+      VERIFY_EVENT: "/api/booking/verify-event",
       GET_MY_TICKETS: "/api/booking/my-tickets",
       GET_BY_ID: "/api/booking",
     },

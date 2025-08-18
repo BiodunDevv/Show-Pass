@@ -51,7 +51,7 @@ export default function SignInPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const { login, isLoading, error, setError } = useAuthStore();
+  const { login, isLoading, error, setError, user, token } = useAuthStore();
   const router = useRouter();
 
   // Auto-slide images
@@ -61,6 +61,13 @@ export default function SignInPage() {
     }, 5000);
     return () => clearInterval(timer);
   }, []);
+
+  // If already authenticated, redirect to home
+  useEffect(() => {
+    if (user && token) {
+      router.replace("/");
+    }
+  }, [user, token, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

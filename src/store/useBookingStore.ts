@@ -54,6 +54,22 @@ export interface IndividualQR {
   attendee: BookingAttendee;
 }
 
+export interface VerificationCodeEntry {
+  attendee: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+  code: string;
+  ticketNumber: number;
+  hash: string;
+  isUsed: boolean;
+  _id: string;
+  checkInTime?: string;
+  checkedInBy?: string;
+  id: string;
+}
+
 export interface Booking {
   _id: string;
   user: BookingUser;
@@ -71,6 +87,7 @@ export interface Booking {
   qrCodeImage: string;
   attendeeInfo: BookingAttendee[];
   individualQRs?: IndividualQR[];
+  verificationCodes?: VerificationCodeEntry[];
   isCheckedIn: boolean;
   createdAt: string;
   updatedAt: string;
@@ -121,14 +138,9 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
         throw new Error("Authentication token not found. Please log in again.");
       }
 
-      const queryParams = new URLSearchParams();
-      queryParams.append("page", page.toString());
-      queryParams.append("limit", limit.toString());
-
+      // Fetch all user tickets without pagination params
       const response = await apiRequest(
-        `${
-          API_CONFIG.ENDPOINTS.BOOKINGS.GET_MY_TICKETS
-        }?${queryParams.toString()}`,
+        `${API_CONFIG.ENDPOINTS.BOOKINGS.GET_MY_TICKETS}`,
         {
           method: "GET",
           headers: getAuthHeaders(token),

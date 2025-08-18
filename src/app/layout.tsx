@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   title: "ShowPass",
   description: "Your go-to platform for event discovery and ticketing",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/icon.png",
   },
 };
 

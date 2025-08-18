@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -105,7 +106,8 @@ interface BookingResponse {
 export default function BookingPage() {
   const params = useParams();
   const router = useRouter();
-  const { user, token } = useAuthStore();
+  const searchParams = useSearchParams();
+  const { user, token, hydrated } = useAuthStore();
 
   // Event and booking state
   const [event, setEvent] = useState<EventDetails | null>(null);
@@ -138,11 +140,12 @@ export default function BookingPage() {
 
   // Redirect if not authenticated
   useEffect(() => {
+    if (!hydrated) return;
     if (!user || !token) {
-      router.push("/auth/signin");
+      router.replace("/auth/signin");
       return;
     }
-  }, [user, token, router]);
+  }, [hydrated, user, token, router]);
 
   // Fetch event details
   useEffect(() => {
@@ -157,7 +160,14 @@ export default function BookingPage() {
           setEvent(data.data);
           // Set default ticket type if available
           if (data.data.ticketTypes.length > 0) {
-            setSelectedTicketType(data.data.ticketTypes[0]._id);
+            // Preselect from query if provided
+            const fromQuery = searchParams?.get("ticketId");
+            const exists = data.data.ticketTypes.find(
+              (t: any) => t._id === fromQuery
+            );
+            setSelectedTicketType(
+              exists ? exists._id : data.data.ticketTypes[0]._id
+            );
           }
         } else {
           throw new Error(data.message || "Failed to fetch event");
@@ -172,7 +182,7 @@ export default function BookingPage() {
     if (params.id) {
       fetchEventDetails();
     }
-  }, [params.id]);
+  }, [params.id, searchParams]);
 
   // Update attendees array when quantity changes
   useEffect(() => {
@@ -535,6 +545,41 @@ export default function BookingPage() {
     link.href = bookingData.qrCodeImage;
     link.click();
   };
+
+  // Celebrate after success for both free and paid bookings
+  useEffect(() => {
+    if (!bookingComplete) return;
+    (async () => {
+      try {
+        const confetti = (await import("canvas-confetti")).default as any;
+        const shoot = () => {
+          confetti({
+            particleCount: 80,
+            spread: 70,
+            origin: { y: 0.6 },
+            scalar: 1,
+          });
+          confetti({
+            particleCount: 60,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 },
+          });
+          confetti({
+            particleCount: 60,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 },
+          });
+        };
+        shoot();
+        setTimeout(shoot, 300);
+        setTimeout(shoot, 700);
+      } catch (e) {
+        // ignore if confetti not available
+      }
+    })();
+  }, [bookingComplete]);
 
   // Loading state
   if (loading) {

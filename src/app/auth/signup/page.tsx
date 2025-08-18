@@ -72,7 +72,7 @@ export default function SignUpPage() {
     accountType: "",
   });
 
-  const { register, isLoading, error, setError } = useAuthStore();
+  const { register, isLoading, error, setError, user, token } = useAuthStore();
   const router = useRouter();
 
   const totalSteps = 3;
@@ -84,6 +84,13 @@ export default function SignUpPage() {
     }, 5000);
     return () => clearInterval(timer);
   }, []);
+
+  // If already authenticated, redirect to home
+  useEffect(() => {
+    if (user && token) {
+      router.replace("/");
+    }
+  }, [user, token, router]);
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));

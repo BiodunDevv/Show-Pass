@@ -210,6 +210,7 @@ interface AuthState {
   role: "user" | "organizer" | "admin" | null;
   isLoading: boolean;
   error: string | null;
+  hydrated: boolean;
 
   // Auth actions
   login: (email: string, password: string) => Promise<AuthResponse>;
@@ -274,6 +275,7 @@ export const useAuthStore = create<AuthState>()(
       role: null,
       isLoading: false,
       error: null,
+      hydrated: false,
 
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
@@ -745,6 +747,7 @@ export const useAuthStore = create<AuthState>()(
         userProfile: state.userProfile,
         token: state.token,
         role: state.role,
+        hydrated: true,
       }),
       // Add storage configuration for better persistence
       storage: {
@@ -766,6 +769,13 @@ export const useAuthStore = create<AuthState>()(
       migrate: (persistedState: any, version: number) => {
         // Handle migration if needed
         return persistedState;
+      },
+      onRehydrateStorage: () => (state, error) => {
+        // Mark store as hydrated after rehydration completes
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (state as any)?.setState?.({ hydrated: true });
+        } catch {}
       },
     }
   )

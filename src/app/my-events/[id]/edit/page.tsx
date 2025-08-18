@@ -557,9 +557,15 @@ function EditEventContent() {
           requiresApproval: formData.requiresApproval,
         };
       } else {
-        // Minor update for approved events
+        // Minor update for approved events - now includes date/time editing
         updateData = {
           description: formData.description,
+          startDate: new Date(
+            `${formData.startDate}T${formData.startTime}`
+          ).toISOString(),
+          endDate: new Date(
+            `${formData.endDate}T${formData.endTime}`
+          ).toISOString(),
           startTime: formData.startTime,
           endTime: formData.endTime,
           category: formData.category,
@@ -899,108 +905,116 @@ function EditEventContent() {
               </div>
             </div>
 
-            {/* Schedule (only for non-approved events) */}
+            {/* Schedule - Now editable for all events */}
+            <div className="bg-slate-700/20 rounded-xl p-4 sm:p-6 border border-slate-600/30">
+              <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+                <Clock size={18} className="text-purple-400" />
+                Event Schedule
+                {isEventApproved && (
+                  <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">
+                    Date & Time Editable
+                  </span>
+                )}
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-white font-medium mb-2 text-sm">
+                    Start Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.startDate}
+                    onChange={(e) =>
+                      handleInputChange("startDate", e.target.value)
+                    }
+                    className={`w-full px-4 py-3 bg-slate-700/50 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm ${
+                      errors.startDate
+                        ? "border-red-500"
+                        : "border-slate-600/50"
+                    }`}
+                  />
+                  {errors.startDate && (
+                    <p className="mt-1 text-red-400 text-xs">
+                      {errors.startDate}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-white font-medium mb-2 text-sm">
+                    End Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) =>
+                      handleInputChange("endDate", e.target.value)
+                    }
+                    className={`w-full px-4 py-3 bg-slate-700/50 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm ${
+                      errors.endDate ? "border-red-500" : "border-slate-600/50"
+                    }`}
+                  />
+                  {errors.endDate && (
+                    <p className="mt-1 text-red-400 text-xs">
+                      {errors.endDate}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-white font-medium mb-2 text-sm">
+                    Start Time *
+                  </label>
+                  <input
+                    type="time"
+                    value={formData.startTime}
+                    onChange={(e) =>
+                      handleInputChange("startTime", e.target.value)
+                    }
+                    className={`w-full px-4 py-3 bg-slate-700/50 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm ${
+                      errors.startTime
+                        ? "border-red-500"
+                        : "border-slate-600/50"
+                    }`}
+                  />
+                  {errors.startTime && (
+                    <p className="mt-1 text-red-400 text-xs">
+                      {errors.startTime}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-white font-medium mb-2 text-sm">
+                    End Time *
+                  </label>
+                  <input
+                    type="time"
+                    value={formData.endTime}
+                    onChange={(e) =>
+                      handleInputChange("endTime", e.target.value)
+                    }
+                    className={`w-full px-4 py-3 bg-slate-700/50 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm ${
+                      errors.endTime ? "border-red-500" : "border-slate-600/50"
+                    }`}
+                  />
+                  {errors.endTime && (
+                    <p className="mt-1 text-red-400 text-xs">
+                      {errors.endTime}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Max Attendees (only for non-approved events) */}
             {canMakeFullEdit && (
               <div className="bg-slate-700/20 rounded-xl p-4 sm:p-6 border border-slate-600/30">
                 <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
-                  <Clock size={18} className="text-purple-400" />
-                  Event Schedule
+                  <Users size={18} className="text-green-400" />
+                  Capacity
                 </h3>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-white font-medium mb-2 text-sm">
-                      Start Date *
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.startDate}
-                      onChange={(e) =>
-                        handleInputChange("startDate", e.target.value)
-                      }
-                      className={`w-full px-4 py-3 bg-slate-700/50 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm ${
-                        errors.startDate
-                          ? "border-red-500"
-                          : "border-slate-600/50"
-                      }`}
-                    />
-                    {errors.startDate && (
-                      <p className="mt-1 text-red-400 text-xs">
-                        {errors.startDate}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-white font-medium mb-2 text-sm">
-                      End Date *
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.endDate}
-                      onChange={(e) =>
-                        handleInputChange("endDate", e.target.value)
-                      }
-                      className={`w-full px-4 py-3 bg-slate-700/50 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm ${
-                        errors.endDate
-                          ? "border-red-500"
-                          : "border-slate-600/50"
-                      }`}
-                    />
-                    {errors.endDate && (
-                      <p className="mt-1 text-red-400 text-xs">
-                        {errors.endDate}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-white font-medium mb-2 text-sm">
-                      Start Time *
-                    </label>
-                    <input
-                      type="time"
-                      value={formData.startTime}
-                      onChange={(e) =>
-                        handleInputChange("startTime", e.target.value)
-                      }
-                      className={`w-full px-4 py-3 bg-slate-700/50 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm ${
-                        errors.startTime
-                          ? "border-red-500"
-                          : "border-slate-600/50"
-                      }`}
-                    />
-                    {errors.startTime && (
-                      <p className="mt-1 text-red-400 text-xs">
-                        {errors.startTime}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-white font-medium mb-2 text-sm">
-                      End Time *
-                    </label>
-                    <input
-                      type="time"
-                      value={formData.endTime}
-                      onChange={(e) =>
-                        handleInputChange("endTime", e.target.value)
-                      }
-                      className={`w-full px-4 py-3 bg-slate-700/50 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm ${
-                        errors.endTime
-                          ? "border-red-500"
-                          : "border-slate-600/50"
-                      }`}
-                    />
-                    {errors.endTime && (
-                      <p className="mt-1 text-red-400 text-xs">
-                        {errors.endTime}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
                 <div className="mt-4">
                   <label className="block text-white font-medium mb-2 text-sm">
                     Max Attendees

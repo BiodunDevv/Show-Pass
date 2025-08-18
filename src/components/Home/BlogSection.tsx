@@ -8,7 +8,6 @@ import { useArticleStore } from "@/store/useArticleStore";
 
 export function BlogSection() {
   const [isClient, setIsClient] = useState(false);
-  const [randomArticles, setRandomArticles] = useState<any[]>([]);
 
   const { articles, fetchArticles, isLoading, error } = useArticleStore();
 
@@ -38,13 +37,8 @@ export function BlogSection() {
     loadArticles();
   }, [isClient, fetchArticles]);
 
-  // Select 3 random articles when articles are loaded
-  useEffect(() => {
-    if (articles.length > 0) {
-      const shuffled = [...articles].sort(() => 0.5 - Math.random());
-      setRandomArticles(shuffled.slice(0, 3));
-    }
-  }, [articles]);
+  // Deterministic selection of the latest 3 articles
+  const topArticles = articles.slice(0, 3);
 
   return (
     <section className="py-12 sm:py-16 lg:py-20 xl:py-24 bg-gradient-to-b from-slate-900 to-slate-800">
@@ -83,7 +77,7 @@ export function BlogSection() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {randomArticles.map((article, index) => (
+            {topArticles.map((article, index) => (
               <div
                 key={article._id}
                 className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg sm:rounded-xl overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-105 hover:border-purple-500/30 group h-full slide-in-up"
@@ -183,7 +177,7 @@ export function BlogSection() {
           </div>
         )}
 
-        {!isLoading && !error && randomArticles.length === 0 && (
+        {!isLoading && !error && topArticles.length === 0 && (
           <div className="text-center py-8 sm:py-12">
             <p className="text-gray-400 text-sm sm:text-base lg:text-lg px-4">
               No articles found

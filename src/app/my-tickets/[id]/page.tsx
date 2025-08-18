@@ -10,7 +10,7 @@ import {
   Clock,
   MapPin,
   Download,
-  QrCode,
+  Hash,
   ArrowLeft,
   User,
   Phone,
@@ -88,6 +88,15 @@ export default function TicketDetailsPage() {
   const formatPrice = (amount: number) => {
     if (amount === 0) return "Free";
     return `₦${amount.toLocaleString()}`;
+  };
+
+  const format343 = (value: string) => {
+    if (!value) return "";
+    const cleaned = String(value).replace(/\s+/g, "");
+    const part1 = cleaned.slice(0, 3);
+    const part2 = cleaned.slice(3, 7);
+    const part3 = cleaned.slice(7, 10);
+    return [part1, part2, part3].filter(Boolean).join(" ");
   };
 
   const getStatusIcon = (status: string, paymentStatus: string) => {
@@ -194,25 +203,25 @@ export default function TicketDetailsPage() {
               text-align: center;
               border-left: 2px dashed #ddd;
             }
-            .qr-code {
-              width: 200px;
-              height: 200px;
-              border: 4px solid white;
-              border-radius: 15px;
-              margin-bottom: 20px;
-              box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            .code-box {
+              padding: 16px 20px;
+              background: #f3f4f6;
+              border-radius: 12px;
+              border: 1px dashed #d1d5db;
+              display: inline-block;
+              margin-bottom: 10px;
+            }
+            .code-text {
+              font-family: Menlo, Consolas, monospace;
+              font-weight: 700;
+              font-size: 20px;
+              color: #111827;
+              letter-spacing: 4px;
             }
             .booking-ref {
               font-size: 14px;
               color: #666;
-              margin-bottom: 8px;
-            }
-            .ref-number {
-              font-size: 16px;
-              font-weight: bold;
-              color: #333;
-              margin-bottom: 20px;
-              letter-spacing: 1px;
+              margin: 14px 0 8px 0;
             }
             .status-badge {
               background: #10b981;
@@ -223,6 +232,7 @@ export default function TicketDetailsPage() {
               font-weight: 600;
               text-transform: uppercase;
               letter-spacing: 0.5px;
+              margin-top: 10px;
             }
             .footer {
               background: #f8f9fa;
@@ -277,17 +287,35 @@ export default function TicketDetailsPage() {
               </div>
               
               <div class="right-section">
-                <img src="${
-                  booking.qrCodeImage
-                }" alt="QR Code" class="qr-code" />
-                <div class="booking-ref">Booking Reference</div>
-                <div class="ref-number">${booking.paymentReference}</div>
+                <div class="booking-ref">Verification Codes</div>
+                ${
+                  booking.verificationCodes &&
+                  booking.verificationCodes.length > 0
+                    ? booking.verificationCodes
+                        .map(
+                          (vc) => `
+                  <div class="code-box"><span class="code-text">${format343(
+                    vc.code
+                  )}</span></div>
+                  <div style="margin-bottom:8px;color:#6b7280;font-size:12px;">${
+                    vc.attendee.name
+                  } (${vc.attendee.email})</div>
+                `
+                        )
+                        .join("")
+                    : `
+                  <div class="code-box"><span class="code-text">${format343(
+                    booking.paymentReference
+                  )}</span></div>
+                  <div style="margin-bottom:8px;color:#6b7280;font-size:12px;">Main Ticket</div>
+                `
+                }
                 <div class="status-badge">${booking.statusDisplay}</div>
               </div>
             </div>
             
             <div class="footer">
-              <p>Present this ticket at the venue entrance. Keep your booking reference safe.</p>
+              <p>Present this ticket at the venue entrance. Keep your verification code safe.</p>
             </div>
           </div>
         </body>
@@ -327,7 +355,7 @@ export default function TicketDetailsPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-900 pt-20">
-        <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="max-w-9xl mx-auto px-4 py-8">
           <div className="animate-pulse">
             <div className="h-8 bg-slate-800 rounded w-1/4 mb-8"></div>
             <div className="h-64 bg-slate-800 rounded-lg mb-8"></div>
@@ -582,24 +610,22 @@ export default function TicketDetailsPage() {
             </motion.div>
 
             {/* Attendee Information */}
-            {booking.attendeeInfo && booking.attendeeInfo.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6"
-              >
-                <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                  <Users className="h-5 w-5 text-purple-400" />
-                  Attendee Information & QR Codes
-                </h2>
-
-                {booking.individualQRs && booking.individualQRs.length > 0 ? (
-                  // Display attendees with individual QR codes
+            {booking.verificationCodes &&
+              booking.verificationCodes.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6"
+                >
+                  <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                    <Users className="h-5 w-5 text-purple-400" />
+                    Attendee Information & Codes
+                  </h2>
                   <div className="space-y-4">
-                    {booking.individualQRs.map((qrData, index) => (
+                    {booking.verificationCodes.map((vc, index) => (
                       <div
-                        key={qrData.attendeeId}
+                        key={vc.id || vc._id}
                         className="bg-slate-700/30 rounded-lg p-4"
                       >
                         {index > 0 && (
@@ -610,7 +636,7 @@ export default function TicketDetailsPage() {
                             <div className="flex items-center gap-2">
                               <User className="h-4 w-4 text-purple-400" />
                               <span className="text-white font-medium">
-                                {qrData.attendee.name}
+                                {vc.attendee.name}
                               </span>
                               <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-full">
                                 Attendee {index + 1}
@@ -618,65 +644,46 @@ export default function TicketDetailsPage() {
                             </div>
                             <div className="flex items-center gap-2 text-gray-400 text-sm">
                               <Mail className="h-4 w-4" />
-                              <span>{qrData.attendee.email}</span>
+                              <span>{vc.attendee.email}</span>
                             </div>
                             <div className="flex items-center gap-2 text-gray-400 text-sm">
                               <Phone className="h-4 w-4" />
-                              <span>{qrData.attendee.phone}</span>
+                              <span>{vc.attendee.phone}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-gray-300 text-sm">
+                              <Hash className="h-4 w-4 text-purple-400" />
+                              <span className="font-mono tracking-widest">
+                                {format343(vc.code)}
+                              </span>
+                              {vc.isUsed && (
+                                <span className="ml-2 text-xs bg-green-500/20 text-green-300 px-2 py-0.5 rounded-full">
+                                  Used
+                                </span>
+                              )}
                             </div>
                           </div>
                           <button
                             onClick={() => {
-                              setSelectedQR(qrData.qrCodeImage);
-                              setSelectedAttendee(qrData.attendee.name);
+                              setSelectedQR(vc.code);
+                              setSelectedAttendee(vc.attendee.name);
                               setShowQRModal(true);
                             }}
                             className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm"
                           >
-                            <QrCode className="h-4 w-4" />
-                            QR Code
+                            <Hash className="h-4 w-4" />
+                            View Code
                           </button>
                         </div>
                       </div>
                     ))}
                   </div>
-                ) : (
-                  // Display single attendee info (fallback)
-                  booking.attendeeInfo.map((attendee, index) => (
-                    <div key={attendee._id} className="space-y-4">
-                      {index > 0 && (
-                        <div className="border-t border-slate-700/50 pt-4" />
-                      )}
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-3">
-                          <User className="h-4 w-4 text-gray-400" />
-                          <span className="text-white font-medium">
-                            {attendee.name}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <Mail className="h-4 w-4 text-gray-400" />
-                          <span className="text-gray-300">
-                            {attendee.email}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <Phone className="h-4 w-4 text-gray-400" />
-                          <span className="text-gray-300">
-                            {attendee.phone}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </motion.div>
-            )}
+                </motion.div>
+              )}
           </div>
 
           {/* Right Column */}
           <div className="space-y-6">
-            {/* QR Code Section */}
+            {/* Codes Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -684,78 +691,77 @@ export default function TicketDetailsPage() {
               className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 text-center"
             >
               <h2 className="text-xl font-bold text-white mb-6 flex items-center justify-center gap-2">
-                <QrCode className="h-5 w-5 text-purple-400" />
-                {booking.individualQRs && booking.individualQRs.length > 1
-                  ? "Entry QR Codes"
-                  : "Entry QR Code"}
+                <Hash className="h-5 w-5 text-purple-400" />
+                {booking.verificationCodes &&
+                booking.verificationCodes.length > 1
+                  ? "Entry Verification Codes"
+                  : "Entry Verification Code"}
               </h2>
 
-              {booking.individualQRs && booking.individualQRs.length > 0 ? (
-                // Multiple QR codes
+              {booking.verificationCodes &&
+              booking.verificationCodes.length > 0 ? (
                 <div className="space-y-4">
                   <p className="text-gray-400 text-sm mb-4">
-                    {booking.individualQRs.length} individual QR codes for each
+                    {booking.verificationCodes.length} individual codes for each
                     attendee
                   </p>
                   <div className="grid gap-3">
-                    {booking.individualQRs.slice(0, 2).map((qrData, index) => (
+                    {booking.verificationCodes.slice(0, 2).map((vc, index) => (
                       <button
-                        key={qrData.attendeeId}
+                        key={vc.id || vc._id || index}
                         onClick={() => {
-                          setSelectedQR(qrData.qrCodeImage);
-                          setSelectedAttendee(qrData.attendee.name);
+                          setSelectedQR(vc.code);
+                          setSelectedAttendee(vc.attendee.name);
                           setShowQRModal(true);
                         }}
                         className="flex items-center gap-3 p-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-colors text-left"
                       >
                         <div className="bg-white rounded p-2">
-                          <QrCode className="h-6 w-6 text-gray-800" />
+                          <Hash className="h-6 w-6 text-gray-800" />
                         </div>
                         <div>
                           <div className="text-white font-medium text-sm">
-                            {qrData.attendee.name}
+                            {vc.attendee.name}
                           </div>
-                          <div className="text-gray-400 text-xs">
-                            Click to view QR code
+                          <div className="text-gray-400 text-xs font-mono">
+                            {format343(vc.code)}
                           </div>
                         </div>
                       </button>
                     ))}
-                    {booking.individualQRs.length > 2 && (
+                    {booking.verificationCodes.length > 2 && (
                       <div className="text-gray-400 text-sm">
-                        +{booking.individualQRs.length - 2} more QR codes
+                        +{booking.verificationCodes.length - 2} more codes
                         available in attendee section
                       </div>
                     )}
                   </div>
                 </div>
               ) : (
-                // Single QR code (fallback)
                 <div>
-                  <div className="bg-white rounded-xl p-4 mb-6 inline-block">
-                    <Image
-                      src={booking.qrCodeImage}
-                      alt="QR Code"
-                      width={200}
-                      height={200}
-                      className="mx-auto"
-                    />
+                  <div className="rounded-xl p-6 mb-6 inline-block bg-white">
+                    <div className="text-gray-600 text-sm mb-2 text-center">
+                      Verification Code
+                    </div>
+                    <div className="font-mono text-3xl font-bold tracking-widest text-gray-900">
+                      {format343(booking.paymentReference)}
+                    </div>
                   </div>
 
                   <p className="text-gray-400 text-sm mb-6">
-                    Present this QR code at the venue entrance for check-in
+                    Present this code at the venue entrance for check-in
                   </p>
 
                   <div className="flex gap-3">
                     <button
                       onClick={() => {
-                        setSelectedQR(booking.qrCodeImage);
+                        setSelectedQR(booking.paymentReference);
                         setSelectedAttendee("Main Ticket");
                         setShowQRModal(true);
                       }}
                       className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
                     >
-                      <QrCode className="h-4 w-4" />
+                      <Hash className="h-4 w-4" />
                       View Full Size
                     </button>
                     <button
@@ -905,7 +911,7 @@ export default function TicketDetailsPage() {
         </div>
       </div>
 
-      {/* QR Modal */}
+      {/* Code Modal */}
       <AnimatePresence>
         {showQRModal && (
           <motion.div
@@ -923,25 +929,21 @@ export default function TicketDetailsPage() {
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-xl font-bold text-gray-900 mb-4">
-                Entry QR Code
+                Entry Verification Code
               </h3>
-              <div className="bg-gray-100 rounded-xl p-4 mb-4">
-                <Image
-                  src={selectedQR || booking.qrCodeImage}
-                  alt={`QR Code for ${selectedAttendee || "ticket"}`}
-                  width={300}
-                  height={300}
-                  className="mx-auto"
-                />
+              <div className="bg-gray-100 rounded-xl p-6 mb-4">
+                <div className="text-gray-600 text-sm mb-2">
+                  Verification Code for:
+                </div>
+                <div className="font-medium text-gray-900 mb-2">
+                  {selectedAttendee || "Main Ticket"}
+                </div>
+                <div className="font-mono text-3xl font-bold tracking-widest text-gray-900">
+                  {format343(selectedQR || booking?.paymentReference || "")}
+                </div>
               </div>
               <div className="text-center mb-4">
                 <p className="text-gray-600 text-sm">
-                  QR Code for:{" "}
-                  <span className="font-medium">
-                    {selectedAttendee || "Main Ticket"}
-                  </span>
-                </p>
-                <p className="text-gray-500 text-xs mt-1">
                   {booking.event.title} - {booking.ticketType}
                 </p>
               </div>

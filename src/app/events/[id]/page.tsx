@@ -23,6 +23,7 @@ import {
   Download,
   Search,
   BarChart3,
+  Hash,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -120,6 +121,7 @@ export default function EventDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const { user, fetchUserProfile, token } = useAuthStore();
+  const { hydrated } = useAuthStore();
   const { userBookings, fetchUserBookings } = useBookingStore();
   const [event, setEvent] = useState<EventDetails | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -157,10 +159,35 @@ export default function EventDetailsPage() {
     (booking) => booking.event && booking.event._id === params.id
   );
 
+  const isBookingAttended = (booking: Booking) =>
+    booking.isCheckedIn ||
+    (booking.verificationCodes || []).some((vc) => vc.isUsed);
+
+  const activeTickets = userEventTickets.filter((b) => !isBookingAttended(b));
+  const attendedTickets = userEventTickets.filter((b) => isBookingAttended(b));
+
   // Check if user has purchased tickets for this event
   const userEventPurchases = userPurchases.filter(
     (purchase) => purchase.event && purchase.event._id === params.id
   );
+
+  // Verification code modal state
+  const [showCodeModal, setShowCodeModal] = useState(false);
+  const [selectedCode, setSelectedCode] = useState<{
+    code: string;
+    attendeeName: string;
+    ticketType: string;
+    eventTitle: string;
+  } | null>(null);
+
+  const format343 = (value: string) => {
+    if (!value) return "";
+    const cleaned = String(value).replace(/\s+/g, "");
+    const part1 = cleaned.slice(0, 3);
+    const part2 = cleaned.slice(3, 7);
+    const part3 = cleaned.slice(7, 10);
+    return [part1, part2, part3].filter(Boolean).join(" ");
+  };
 
   useEffect(() => {
     const fetchEventDetails = async () => {
@@ -202,6 +229,14 @@ export default function EventDetailsPage() {
     }
   }, [params.id, token]);
 
+  // Load user's bookings so we can show their tickets on this event
+  useEffect(() => {
+    if (user) {
+      // Fetch all user tickets for this event context
+      fetchUserBookings().catch(() => {});
+    }
+  }, [user, fetchUserBookings]);
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return {
@@ -223,6 +258,7 @@ export default function EventDetailsPage() {
   };
 
   const openGoogleMaps = () => {
+    if (!hydrated) return;
     if (!user) {
       router.push("/auth/signin");
       return;
@@ -235,6 +271,7 @@ export default function EventDetailsPage() {
   };
 
   const handleBooking = () => {
+    if (!hydrated) return;
     if (!user) {
       router.push("/auth/signin");
       return;
@@ -370,7 +407,6 @@ export default function EventDetailsPage() {
       setOrganizerProfileLoading(false);
     }, 300);
   };
-
   // Fetch event attendees function
   const fetchEventAttendees = async (page: number = 1, search: string = "") => {
     if (!token || !event) {
@@ -576,7 +612,10 @@ export default function EventDetailsPage() {
                 </div>
               )}
             </div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">
+            <h1
+              className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-2 truncate"
+              title={event.title}
+            >
               {event.title}
             </h1>
             <p className="text-gray-200 text-sm sm:text-base lg:text-lg">
@@ -632,9 +671,17 @@ export default function EventDetailsPage() {
                       <p className="text-gray-300 text-sm">
                         {event.venue.address}
                       </p>
-                      <p className="text-gray-300 text-sm">
-                        {event.venue.city}, {event.venue.state}
-                      </p>
+                      <div className="flex gap-2">
+                        <span className="text-sm text-gray-300">
+                          {event.venue.city}, {event.venue.state}
+                        </span>
+                        <Link
+                          href={`/events/${params.id}`}
+                          className="text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors"
+                        >
+                          View Map
+                        </Link>
+                      </div>
                     </div>
                   </div>
 
@@ -948,82 +995,180 @@ export default function EventDetailsPage() {
                   </Link>
                 </div>
 
-                <div className="space-y-3">
-                  {userEventTickets.slice(0, 3).map((booking) => (
-                    <div
-                      key={booking._id}
-                      className="bg-gradient-to-r from-purple-500/10 to-purple-600/10 border border-purple-500/30 rounded-lg p-4"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <p className="font-semibold text-white">
-                            {booking.ticketType}
-                          </p>
-                          <p className="text-sm text-gray-400">
-                            Ref: {booking.paymentReference}
-                          </p>
+                {/* Active Tickets */}
+                {activeTickets.length > 0 && (
+                  <div className="mb-4">
+                    <h3 className="text-white font-semibold mb-2 text-sm">
+                      Active
+                    </h3>
+                    <div className="space-y-3">
+                      {activeTickets.slice(0, 2).map((booking) => (
+                        <div
+                          key={booking._id}
+                          className="bg-gradient-to-r from-purple-500/10 to-purple-600/10 border border-purple-500/30 rounded-lg p-4"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <div>
+                              <p
+                                className="font-semibold text-white truncate"
+                                title={booking.ticketType}
+                              >
+                                {booking.ticketType}
+                              </p>
+                              <p className="text-sm text-gray-400">
+                                Ref: {booking.paymentReference}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <span className="px-2 py-1 rounded-full text-xs bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                                Active
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs text-gray-400">
+                              Purchased:{" "}
+                              {new Date(booking.createdAt).toLocaleDateString()}
+                            </p>
+                            <div className="flex gap-2">
+                              <Link
+                                href={`/my-tickets/${booking._id}`}
+                                className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded-md flex items-center gap-1 transition-colors"
+                              >
+                                <Eye className="h-3 w-3" />
+                                Details
+                              </Link>
+                              <button
+                                onClick={() => {
+                                  const codeEntry =
+                                    booking.verificationCodes?.[0];
+                                  const codeValue =
+                                    codeEntry?.code || booking.paymentReference;
+                                  const attendeeName =
+                                    codeEntry?.attendee?.name || "Ticket";
+                                  setSelectedCode({
+                                    code: codeValue,
+                                    attendeeName,
+                                    ticketType: booking.ticketType,
+                                    eventTitle: event.title,
+                                  });
+                                  setShowCodeModal(true);
+                                }}
+                                className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-md flex items-center gap-1 transition-colors"
+                              >
+                                <Hash className="h-3 w-3" />
+                                Code
+                              </button>
+                            </div>
+                          </div>
+                          {booking.verificationCodes?.length ? (
+                            <div className="mt-2 text-xs text-purple-300 font-mono">
+                              Code:{" "}
+                              {format343(booking.verificationCodes[0].code)}
+                            </div>
+                          ) : null}
                         </div>
-                        <div className="text-right">
-                          <p className="text-lg font-bold text-purple-400">
-                            {formatPrice(booking.totalAmount)}
-                          </p>
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs ${
-                              booking.paymentStatus === "completed"
-                                ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                                : booking.paymentStatus === "pending"
-                                ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-                                : "bg-red-500/20 text-red-400 border border-red-500/30"
-                            }`}
-                          >
-                            {booking.paymentStatus}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs text-gray-400">
-                          Purchased:{" "}
-                          {new Date(booking.createdAt).toLocaleDateString()}
-                        </p>
-                        <div className="flex gap-2">
-                          <Link
-                            href={`/my-tickets/${booking._id}`}
-                            className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded-md flex items-center gap-1 transition-colors"
-                          >
-                            <Eye className="h-3 w-3" />
-                            Details
-                          </Link>
-                          {booking.qrCodeImage && (
-                            <button
-                              onClick={() => {
-                                setSelectedQRCode({
-                                  image: booking.qrCodeImage,
-                                  ticketType: booking.ticketType,
-                                  eventTitle: event.title,
-                                });
-                                setShowQRModal(true);
-                              }}
-                              className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-md flex items-center gap-1 transition-colors"
-                            >
-                              <QrCode className="h-3 w-3" />
-                              QR
-                            </button>
-                          )}
-                        </div>
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                    {activeTickets.length > 2 && (
+                      <div className="mt-3 text-center">
+                        <Link
+                          href="/my-tickets"
+                          className="text-purple-400 hover:text-purple-300 text-xs"
+                        >
+                          View {activeTickets.length - 2} more active tickets →
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                )}
 
-                {userEventTickets.length > 3 && (
-                  <div className="mt-4 text-center">
-                    <Link
-                      href="/my-tickets"
-                      className="text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors"
-                    >
-                      View {userEventTickets.length - 3} more tickets →
-                    </Link>
+                {/* Attended Tickets */}
+                {attendedTickets.length > 0 && (
+                  <div>
+                    <h3 className="text-white font-semibold mb-2 text-sm">
+                      Attended
+                    </h3>
+                    <div className="space-y-3">
+                      {attendedTickets.slice(0, 2).map((booking) => (
+                        <div
+                          key={booking._id}
+                          className="bg-gradient-to-r from-green-500/10 to-green-600/10 border border-green-500/30 rounded-lg p-4"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <div>
+                              <p
+                                className="font-semibold text-white truncate"
+                                title={booking.ticketType}
+                              >
+                                {booking.ticketType}
+                              </p>
+                              <p className="text-sm text-gray-400">
+                                Ref: {booking.paymentReference}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <span className="px-2 py-1 rounded-full text-xs bg-green-500/20 text-green-300 border border-green-500/30">
+                                Attended
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs text-gray-400">
+                              Purchased:{" "}
+                              {new Date(booking.createdAt).toLocaleDateString()}
+                            </p>
+                            <div className="flex gap-2">
+                              <Link
+                                href={`/my-tickets/${booking._id}`}
+                                className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded-md flex items-center gap-1 transition-colors"
+                              >
+                                <Eye className="h-3 w-3" />
+                                Details
+                              </Link>
+                              <button
+                                onClick={() => {
+                                  const codeEntry =
+                                    booking.verificationCodes?.[0];
+                                  const codeValue =
+                                    codeEntry?.code || booking.paymentReference;
+                                  const attendeeName =
+                                    codeEntry?.attendee?.name || "Ticket";
+                                  setSelectedCode({
+                                    code: codeValue,
+                                    attendeeName,
+                                    ticketType: booking.ticketType,
+                                    eventTitle: event.title,
+                                  });
+                                  setShowCodeModal(true);
+                                }}
+                                className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-md flex items-center gap-1 transition-colors"
+                              >
+                                <Hash className="h-3 w-3" />
+                                Code
+                              </button>
+                            </div>
+                          </div>
+                          {booking.verificationCodes?.length ? (
+                            <div className="mt-2 text-xs text-purple-300 font-mono">
+                              Code:{" "}
+                              {format343(booking.verificationCodes[0].code)}
+                            </div>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                    {attendedTickets.length > 2 && (
+                      <div className="mt-3 text-center">
+                        <Link
+                          href="/my-tickets"
+                          className="text-purple-400 hover:text-purple-300 text-xs"
+                        >
+                          View {attendedTickets.length - 2} more attended
+                          tickets →
+                        </Link>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -2160,40 +2305,52 @@ export default function EventDetailsPage() {
         </>
       )}
 
-      {/* QR Code Modal */}
-      {showQRModal && selectedQRCode && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 max-w-md w-full">
+      {/* Verification Code Modal */}
+      {showCodeModal && selectedCode && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-800 rounded-lg max-w-md w-full p-6 border border-slate-700">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white">Ticket QR Code</h3>
+              <h2 className="text-xl font-bold text-white">
+                Verification Code
+              </h2>
               <button
-                onClick={() => {
-                  setShowQRModal(false);
-                  setSelectedQRCode(null);
-                }}
-                className="text-gray-400 hover:text-white transition-colors"
+                onClick={() => setShowCodeModal(false)}
+                className="p-2 text-gray-400 hover:text-white transition-colors"
               >
-                <X className="h-6 w-6" />
+                <X className="h-5 w-5" />
               </button>
             </div>
-
-            <div className="text-center">
-              <div className="bg-white p-4 rounded-lg mb-4 inline-block">
-                <img
-                  src={selectedQRCode.image}
-                  alt="QR Code"
-                  className="w-48 h-48 mx-auto"
-                />
+            <div className="space-y-3 text-center">
+              <div className="text-gray-300 text-sm">
+                {selectedCode.ticketType}
               </div>
-              <p className="text-white font-medium mb-1">
-                {selectedQRCode.ticketType}
-              </p>
-              <p className="text-gray-400 text-sm mb-4">
-                {selectedQRCode.eventTitle}
-              </p>
-              <p className="text-gray-400 text-xs">
-                Show this QR code at the event entrance for check-in
-              </p>
+              <div className="font-mono text-3xl font-bold tracking-widest text-white">
+                {format343(selectedCode.code)}
+              </div>
+              <div className="text-gray-400 text-sm">
+                {selectedCode.attendeeName}
+              </div>
+              <div className="text-gray-500 text-xs">
+                {selectedCode.eventTitle}
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  navigator.clipboard
+                    .writeText(selectedCode.code)
+                    .catch(() => {});
+                }}
+                className="flex-1 py-2 px-4 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+              >
+                Copy Code
+              </button>
+              <button
+                onClick={() => setShowCodeModal(false)}
+                className="flex-1 py-2 px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

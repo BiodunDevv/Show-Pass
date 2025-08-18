@@ -247,7 +247,7 @@ export function UpcomingEventsSection() {
         <div className="text-center mt-16 slide-in-up">
           <Link
             href="/events"
-            className="inline-block px-12 py-4 text-lg rounded-full border border-purple-500 text-white bg-purple-900 shadow-lg shadow-purple-900/20 font-semibold transition-all duration-300 hover:scale-105"
+            className="inline-flex items-center gap-2 px-4 sm:px-6 lg:px-8 py-2 sm:py-3 lg:py-4 text-sm sm:text-base lg:text-lg font-semibold border border-purple-500 bg-purple-900 text-white shadow-lg shadow-purple-900/20 rounded-full transition-all duration-300 hover:scale-105"
           >
             Load More Events
           </Link>

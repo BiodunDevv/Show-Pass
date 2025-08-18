@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Clock, TrendingUp, MapPin, Calendar, X } from "lucide-react";
 import { useEventStore } from "@/store/useEventStore";
@@ -39,11 +39,8 @@ export function HeroSearch() {
     { name: "Gaming", icon: "🎮" },
   ];
 
-  // Randomly select 4 categories each time
-  const randomCategories = useMemo(() => {
-    const shuffled = [...allCategories].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 4);
-  }, []);
+  // Select a stable subset to avoid SSR/CSR mismatch
+  const featuredCategories = allCategories.slice(0, 4);
 
   // Load data from localStorage
   useEffect(() => {
@@ -250,7 +247,7 @@ export function HeroSearch() {
 
               {/* Search Suggestions Dropdown */}
               {isOpen && (
-                <div className="absolute top-full left-0 right-0 mt-2 mx-2 sm:mx-0 bg-transparent backdrop-blur-sm border border-white/10 rounded-2xl shadow-2xl z-50 max-h-80 sm:max-h-96 overflow-hidden">
+                <div className="absolute top-full left-0 right-0 mt-2 mx-2 sm:mx-0 bg-slate-900/70 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl z-50 max-h-80 sm:max-h-96 overflow-hidden">
                   {/* Current Query Suggestions */}
                   {query.trim() && suggestions.length > 0 && (
                     <div className="p-4 sm:p-6 border-b border-white/10">
@@ -349,13 +346,41 @@ export function HeroSearch() {
               )}
             </form>
 
+            {/* Recent Searches row */}
+            {recentSearches.length > 0 && (
+              <div className="mt-4 sm:mt-6">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-xs sm:text-sm text-white/70">
+                    Recent searches
+                  </h4>
+                  <button
+                    onClick={clearRecentSearches}
+                    className="text-xs text-purple-300 hover:text-purple-200"
+                  >
+                    Clear
+                  </button>
+                </div>
+                <div className="flex gap-2 overflow-x-auto py-1">
+                  {recentSearches.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => handleSuggestionClick(s)}
+                      className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs sm:text-sm bg-white/10 hover:bg-white/15 border border-white/15 text-white transition-colors"
+                    >
+                      {s.text}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Quick Action Categories */}
             <div className="mt-8 sm:mt-12">
               <p className="text-center text-gray-400 text-sm sm:text-base mb-4 sm:mb-6">
                 Or browse popular categories
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto">
-                {randomCategories.map((category) => (
+                {featuredCategories.map((category) => (
                   <button
                     key={category.name}
                     onClick={() => handleCategoryClick(category.name)}

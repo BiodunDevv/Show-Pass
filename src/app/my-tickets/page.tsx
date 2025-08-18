@@ -10,7 +10,7 @@ import {
   Clock,
   MapPin,
   Download,
-  QrCode,
+  Hash,
   ChevronLeft,
   ChevronRight,
   Ticket,
@@ -25,7 +25,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 
 export default function MyTicketsPage() {
   const router = useRouter();
-  const { user, token } = useAuthStore();
+  const { user, token, hydrated } = useAuthStore();
   const {
     userBookings,
     isLoading,
@@ -48,11 +48,12 @@ export default function MyTicketsPage() {
 
   // Redirect if not authenticated
   useEffect(() => {
+    if (!hydrated) return;
     if (!user || !token) {
-      router.push("/auth/signin");
+      router.replace("/auth/signin");
       return;
     }
-  }, [user, token, router]);
+  }, [hydrated, user, token, router]);
 
   // Fetch user bookings
   useEffect(() => {
@@ -99,141 +100,139 @@ export default function MyTicketsPage() {
     return `₦${amount.toLocaleString()}`;
   };
 
+  const format343 = (value: string) => {
+    if (!value) return "";
+    const cleaned = String(value).replace(/\s+/g, "");
+    const part1 = cleaned.slice(0, 3);
+    const part2 = cleaned.slice(3, 7);
+    const part3 = cleaned.slice(7, 10);
+    return [part1, part2, part3].filter(Boolean).join(" ");
+  };
+
   const handleDownloadTicket = (booking: Booking) => {
     setSelectedBookingForDownload(booking);
     setShowDownloadModal(true);
   };
 
   const downloadQRCode = async (
-    qrImageUrl: string,
+    code: string,
     attendeeName: string,
     eventTitle: string
   ) => {
     try {
-      // Create a canvas to generate a nice QR code with details
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      // Set canvas size
       canvas.width = 600;
       canvas.height = 700;
 
-      // Background
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Load and draw QR code
-      const qrImage = new window.Image();
-      qrImage.crossOrigin = "anonymous";
+      ctx.fillStyle = "#7c3aed";
+      ctx.fillRect(0, 0, canvas.width, 100);
 
-      qrImage.onload = () => {
-        // Header background
-        ctx.fillStyle = "#7c3aed";
-        ctx.fillRect(0, 0, canvas.width, 100);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 24px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("🎟️ ShowPass", canvas.width / 2, 40);
+      ctx.font = "16px Arial";
+      ctx.fillText("Verification Ticket", canvas.width / 2, 70);
 
-        // ShowPass title
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 24px Arial";
-        ctx.textAlign = "center";
-        ctx.fillText("🎟️ ShowPass", canvas.width / 2, 40);
-        ctx.font = "16px Arial";
-        ctx.fillText("Digital Ticket", canvas.width / 2, 70);
+      ctx.fillStyle = "#1f2937";
+      ctx.font = "bold 20px Arial";
+      ctx.textAlign = "center";
+      const maxWidth = canvas.width - 40;
+      const words = eventTitle.split(" ");
+      let line = "";
+      let y = 140;
 
-        // Event title
-        ctx.fillStyle = "#1f2937";
-        ctx.font = "bold 20px Arial";
-        ctx.textAlign = "center";
-        const maxWidth = canvas.width - 40;
-        const words = eventTitle.split(" ");
-        let line = "";
-        let y = 140;
-
-        for (let n = 0; n < words.length; n++) {
-          const testLine = line + words[n] + " ";
-          const metrics = ctx.measureText(testLine);
-          const testWidth = metrics.width;
-          if (testWidth > maxWidth && n > 0) {
-            ctx.fillText(line, canvas.width / 2, y);
-            line = words[n] + " ";
-            y += 30;
-          } else {
-            line = testLine;
-          }
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + " ";
+        const metrics = ctx.measureText(testLine);
+        const testWidth = metrics.width;
+        if (testWidth > maxWidth && n > 0) {
+          ctx.fillText(line, canvas.width / 2, y);
+          line = words[n] + " ";
+          y += 30;
+        } else {
+          line = testLine;
         }
-        ctx.fillText(line, canvas.width / 2, y);
+      }
+      ctx.fillText(line, canvas.width / 2, y);
 
-        // Attendee name
-        ctx.fillStyle = "#6b7280";
-        ctx.font = "16px Arial";
-        ctx.fillText(`Attendee: ${attendeeName}`, canvas.width / 2, y + 40);
+      ctx.fillStyle = "#6b7280";
+      ctx.font = "16px Arial";
+      ctx.fillText(`Attendee: ${attendeeName}`, canvas.width / 2, y + 40);
 
-        // QR Code
-        const qrSize = 280;
-        const qrX = (canvas.width - qrSize) / 2;
-        const qrY = y + 70;
+      const cardWidth = canvas.width - 80;
+      const cardHeight = 160;
+      const cardX = 40;
+      const cardY = y + 70;
 
-        // QR background
-        ctx.fillStyle = "#f9fafb";
-        ctx.fillRect(qrX - 20, qrY - 20, qrSize + 40, qrSize + 40);
+      ctx.fillStyle = "#f3f4f6";
+      ctx.fillRect(cardX, cardY, cardWidth, cardHeight);
 
-        // Draw QR code
-        ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
+      ctx.strokeStyle = "#d1d5db";
+      ctx.setLineDash([10, 6]);
+      ctx.strokeRect(cardX + 4, cardY + 4, cardWidth - 8, cardHeight - 8);
+      ctx.setLineDash([]);
 
-        // Instructions
-        ctx.fillStyle = "#6b7280";
-        ctx.font = "14px Arial";
-        ctx.fillText(
-          "Present this QR code at the venue entrance",
-          canvas.width / 2,
-          qrY + qrSize + 60
-        );
+      ctx.fillStyle = "#6b7280";
+      ctx.font = "bold 14px Arial";
+      ctx.textAlign = "left";
+      ctx.fillText("Verification Code", cardX + 24, cardY + 40);
 
-        // Download
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.download = `showpass-ticket-${attendeeName.replace(
-              /\s+/g,
-              "-"
-            )}-${eventTitle.replace(/\s+/g, "-")}.png`;
-            link.href = url;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-          }
-        }, "image/png");
-      };
+      ctx.fillStyle = "#111827";
+      ctx.font = "bold 36px Menlo, Consolas, monospace";
+      ctx.textAlign = "center";
+      const spaced = format343(code);
+      ctx.fillText(spaced, canvas.width / 2, cardY + 100);
 
-      qrImage.src = qrImageUrl;
+      ctx.fillStyle = "#6b7280";
+      ctx.font = "14px Arial";
+      ctx.fillText(
+        "Present this code at the venue entrance",
+        canvas.width / 2,
+        cardY + cardHeight + 40
+      );
+
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.download = `showpass-code-${attendeeName.replace(
+            /\s+/g,
+            "-"
+          )}-${eventTitle.replace(/\s+/g, "-")}.png`;
+          link.href = url;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }
+      }, "image/png");
     } catch (error) {
-      console.error("Failed to download QR code:", error);
-      // Fallback: direct download
-      const link = document.createElement("a");
-      link.download = `showpass-ticket-${attendeeName.replace(
-        /\s+/g,
-        "-"
-      )}.png`;
-      link.href = qrImageUrl;
-      link.click();
+      console.error("Failed to download code image:", error);
     }
   };
 
   const showQRCode = (booking: Booking) => {
-    if (booking.individualQRs && booking.individualQRs.length > 0) {
-      setSelectedBookingQRs(booking.individualQRs);
-      setSelectedQR(booking.individualQRs[0].qrCodeImage);
-      setSelectedAttendee(booking.individualQRs[0].attendee.name);
+    const codes = booking.verificationCodes || [];
+    if (codes.length > 0) {
+      setSelectedBookingQRs(codes);
+      setSelectedQR(codes[0].code);
+      setSelectedAttendee(codes[0].attendee.name);
     } else {
       setSelectedBookingQRs([]);
-      setSelectedQR(booking.qrCodeImage);
+      setSelectedQR(booking.paymentReference);
       setSelectedAttendee("Main Ticket");
     }
     setShowQRModal(true);
   };
 
+  if (!hydrated) return null;
   if (!user) return null;
 
   return (
@@ -423,24 +422,24 @@ export default function MyTicketsPage() {
                           {booking.ticketType} x {booking.quantity}
                         </span>
                       </div>
-                      {booking.individualQRs &&
-                        booking.individualQRs.length > 0 && (
+                      {booking.verificationCodes &&
+                        booking.verificationCodes.length > 0 && (
                           <div className="text-xs text-purple-300 bg-purple-500/10 rounded-lg p-2 mt-2">
                             <div className="font-medium mb-1">Attendees:</div>
                             <div className="space-y-1">
-                              {booking.individualQRs
+                              {booking.verificationCodes
                                 .slice(0, 2)
-                                .map((qr, index) => (
+                                .map((vc, index) => (
                                   <div
-                                    key={`${qr.attendeeId}-${index}`}
+                                    key={`${vc.id || vc._id || index}`}
                                     className="text-gray-400"
                                   >
-                                    • {qr.attendee.name}
+                                    • {vc.attendee.name}
                                   </div>
                                 ))}
-                              {booking.individualQRs.length > 2 && (
+                              {booking.verificationCodes.length > 2 && (
                                 <div className="text-gray-400">
-                                  • +{booking.individualQRs.length - 2} more
+                                  • +{booking.verificationCodes.length - 2} more
                                 </div>
                               )}
                             </div>
@@ -466,9 +465,9 @@ export default function MyTicketsPage() {
                       <button
                         onClick={() => showQRCode(booking)}
                         className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition-colors"
-                        title="Show QR Code"
+                        title="Show Verification Code"
                       >
-                        <QrCode size={16} />
+                        <Hash size={16} />
                       </button>
 
                       <button
@@ -571,7 +570,7 @@ export default function MyTicketsPage() {
         )}
       </div>
 
-      {/* QR Code Modal */}
+      {/* Verification Code Modal */}
       <AnimatePresence>
         {showQRModal && selectedQR && (
           <motion.div
@@ -590,11 +589,10 @@ export default function MyTicketsPage() {
             >
               <h3 className="text-xl font-bold text-gray-900 mb-4">
                 {selectedBookingQRs.length > 0
-                  ? "Attendee QR Codes"
-                  : "QR Code"}
+                  ? "Attendee Verification Codes"
+                  : "Verification Code"}
               </h3>
 
-              {/* Attendee Selection for Multiple QRs */}
               {selectedBookingQRs.length > 0 && (
                 <div className="mb-4 text-left">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -603,43 +601,42 @@ export default function MyTicketsPage() {
                   <select
                     value={selectedQR}
                     onChange={(e) => {
-                      const selectedQRData = selectedBookingQRs.find(
-                        (qr) => qr.qrCodeImage === e.target.value
+                      const selectedVC = selectedBookingQRs.find(
+                        (vc: any) => vc.code === e.target.value
                       );
                       setSelectedQR(e.target.value);
-                      setSelectedAttendee(selectedQRData?.attendee.name || "");
+                      setSelectedAttendee(selectedVC?.attendee.name || "");
                     }}
                     className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-black"
                   >
-                    {selectedBookingQRs.map((qr, index) => (
+                    {selectedBookingQRs.map((vc: any, index: number) => (
                       <option
-                        key={`${qr.attendeeId}-option-${index}`}
-                        value={qr.qrCodeImage}
+                        key={`${vc.id || vc._id || index}-option`}
+                        value={vc.code}
                       >
-                        {qr.attendee.name} ({qr.attendee.email})
+                        {vc.attendee.name} ({vc.attendee.email})
                       </option>
                     ))}
                   </select>
                 </div>
               )}
 
-              <div className="bg-gray-100 rounded-xl p-4 mb-4">
-                <Image
-                  src={selectedQR}
-                  alt={`QR Code for ${selectedAttendee}`}
-                  width={300}
-                  height={300}
-                  className="mx-auto"
-                />
+              <div className="bg-gray-100 rounded-xl p-6 mb-4">
+                <div className="text-gray-600 text-sm mb-2">
+                  Verification Code
+                </div>
+                <div className="font-mono text-3xl font-bold tracking-widest text-gray-900">
+                  {format343(selectedQR)}
+                </div>
               </div>
 
               <div className="text-center mb-4">
                 <p className="text-gray-600 text-sm">
-                  QR Code for:{" "}
+                  Verification Code for:{" "}
                   <span className="font-medium">{selectedAttendee}</span>
                 </p>
                 <p className="text-gray-500 text-xs mt-1">
-                  Present this QR code at the venue entrance
+                  Present this code at the venue entrance
                 </p>
               </div>
 
@@ -693,40 +690,42 @@ export default function MyTicketsPage() {
               </div>
 
               <div className="space-y-3">
-                {selectedBookingForDownload.individualQRs &&
-                selectedBookingForDownload.individualQRs.length > 0 ? (
-                  selectedBookingForDownload.individualQRs.map((qr, index) => (
-                    <button
-                      key={`${qr.attendeeId}-download-${index}`}
-                      onClick={() => {
-                        downloadQRCode(
-                          qr.qrCodeImage,
-                          qr.attendee.name,
-                          selectedBookingForDownload.event.title
-                        );
-                        setShowDownloadModal(false);
-                      }}
-                      className="w-full flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
-                    >
-                      <div className="bg-purple-100 p-2 rounded-lg">
-                        <QrCode className="h-4 w-4 text-purple-600" />
-                      </div>
-                      <div>
-                        <div className="font-medium text-gray-900">
-                          {qr.attendee.name}
+                {selectedBookingForDownload.verificationCodes &&
+                selectedBookingForDownload.verificationCodes.length > 0 ? (
+                  selectedBookingForDownload.verificationCodes.map(
+                    (vc, index) => (
+                      <button
+                        key={`${vc.id || vc._id || index}-download`}
+                        onClick={() => {
+                          downloadQRCode(
+                            vc.code,
+                            vc.attendee.name,
+                            selectedBookingForDownload.event.title
+                          );
+                          setShowDownloadModal(false);
+                        }}
+                        className="w-full flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                      >
+                        <div className="bg-purple-100 p-2 rounded-lg">
+                          <Hash className="h-4 w-4 text-purple-600" />
                         </div>
-                        <div className="text-sm text-gray-500">
-                          {qr.attendee.email}
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            {vc.attendee.name}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {vc.attendee.email}
+                          </div>
                         </div>
-                      </div>
-                      <Download className="h-4 w-4 text-gray-400 ml-auto" />
-                    </button>
-                  ))
+                        <Download className="h-4 w-4 text-gray-400 ml-auto" />
+                      </button>
+                    )
+                  )
                 ) : (
                   <button
                     onClick={() => {
                       downloadQRCode(
-                        selectedBookingForDownload.qrCodeImage,
+                        selectedBookingForDownload.paymentReference,
                         "Main Ticket",
                         selectedBookingForDownload.event.title
                       );
@@ -735,7 +734,7 @@ export default function MyTicketsPage() {
                     className="w-full flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
                   >
                     <div className="bg-purple-100 p-2 rounded-lg">
-                      <QrCode className="h-4 w-4 text-purple-600" />
+                      <Hash className="h-4 w-4 text-purple-600" />
                     </div>
                     <div>
                       <div className="font-medium text-gray-900">

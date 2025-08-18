@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { API_CONFIG, apiRequest } from "@/lib/api";
+import { useAuthStore } from "./useAuthStore";
 
 // Event interfaces based on the API response
 interface Venue {
@@ -136,22 +137,29 @@ interface CheckInResponse {
   };
 }
 
-interface EventAttendee {
-  _id: string;
-  user: {
-    _id: string;
-    firstName: string;
-    lastName: string;
+export interface EventAttendee {
+  bookingId: string;
+  attendeeType: "booker" | "attendee";
+  name: string;
+  email: string;
+  phone: string;
+  bookingStatus: string;
+  ticketType: string;
+  bookingDate: string;
+  totalAmount: number;
+  paymentReference: string;
+  isCheckedIn: boolean;
+  checkInTime: string | null;
+  verificationCode: string;
+  ticketNumber: number;
+  codeHash: string;
+  bookingUser: {
+    name: string;
     email: string;
+    phone: string;
   };
-  event: string;
-  ticketType: TicketType;
-  paymentStatus: "pending" | "completed" | "failed" | "refunded";
-  bookingReference: string;
-  qrCode: string;
-  checkedIn: boolean;
-  checkedInAt?: string;
-  createdAt: string;
+  totalBookingAmount: number;
+  bookingQuantity: number;
 }
 
 interface EventState {
@@ -189,10 +197,30 @@ interface EventState {
   // Attendee management
   fetchEventAttendees: (
     eventId: string,
-    filters?: { page?: number; limit?: number }
-  ) => Promise<void>;
+    filters?: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      filter?: string;
+    }
+  ) => Promise<{
+    success: boolean;
+    data?: any[];
+    pagination?: {
+      currentPage: number;
+      totalPages: number;
+      totalItems: number;
+      limit: number;
+    };
+    statusSummary?: any;
+    error?: string;
+  }>;
   checkInAttendee: (bookingId: string) => Promise<CheckInResponse>;
   verifyQRCode: (qrCodeData: string) => Promise<QRVerificationResponse>;
+  verifyEventCode: (
+    eventId: string,
+    verificationCode: string
+  ) => Promise<QRVerificationResponse>;
 
   // State management
   setFilters: (filters: Partial<EventFilters>) => void;
@@ -584,19 +612,40 @@ export const useEventStore = create<EventState>()(
       // Attendee management
       fetchEventAttendees: async (
         eventId: string,
-        filters?: { page?: number; limit?: number }
+        filters?: {
+          page?: number;
+          limit?: number;
+          search?: string;
+          filter?: string;
+        }
       ) => {
+        // Get token from localStorage
+        const authData = JSON.parse(
+          localStorage.getItem("auth-storage") || "{}"
+        );
+        const token = authData?.state?.token;
+
+        if (!token) {
+          set({ error: "Authentication required", isLoading: false });
+          return { success: false, error: "Authentication required" };
+        }
+
         set({ isLoading: true, error: null });
 
         try {
           const queryParams = new URLSearchParams();
-          if (filters) {
-            Object.entries(filters).forEach(([key, value]) => {
-              if (value !== undefined && value !== null) {
-                queryParams.append(key, value.toString());
-              }
-            });
+          if (filters?.search?.trim()) {
+            queryParams.append("search", filters.search.trim());
           }
+          if (filters?.filter && filters.filter !== "all") {
+            queryParams.append("status", filters.filter);
+          }
+
+          console.log(
+            "Fetching attendees for event ID:",
+            eventId,
+            queryParams.toString()
+          );
 
           const data = await apiRequest(
             `${
@@ -604,21 +653,49 @@ export const useEventStore = create<EventState>()(
             }/${eventId}/attendees?${queryParams.toString()}`,
             {
               method: "GET",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
             }
           );
 
-          set({
-            eventAttendees: data.data,
-            isLoading: false,
-            error: null,
-          });
+          if (data.success) {
+            const attendees = data.data?.attendees || [];
+            set({
+              eventAttendees: attendees,
+              isLoading: false,
+              error: null,
+            });
+
+            return {
+              success: true,
+              data: attendees,
+              pagination: {
+                currentPage: 1,
+                totalPages: 1,
+                totalItems: data.data?.totalAttendees || attendees.length,
+                limit: attendees.length,
+              },
+              statusSummary: data.data?.statusSummary,
+            };
+          } else {
+            console.error("Failed to fetch attendees:", data.message);
+            set({
+              error: "Failed to fetch event attendees",
+              isLoading: false,
+            });
+            return {
+              success: false,
+              error: "Failed to fetch event attendees",
+            };
+          }
         } catch (error) {
           const errorMessage =
             error instanceof Error
               ? error.message
               : "Failed to fetch event attendees";
           set({ error: errorMessage, isLoading: false });
-          throw error;
+          return { success: false, error: errorMessage };
         }
       },
 
@@ -626,21 +703,31 @@ export const useEventStore = create<EventState>()(
         set({ isLoading: true, error: null });
 
         try {
+          // Get the authentication token
+          const token = useAuthStore.getState().token;
+
+          if (!token) {
+            throw new Error("Authentication required. Please login first.");
+          }
+
           const data = await apiRequest(
             `${API_CONFIG.ENDPOINTS.BOOKINGS.CHECK_IN}/${bookingId}/checkin`,
             {
               method: "PUT",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
             }
           );
 
           // Update the attendee in the local state
           set((state) => ({
             eventAttendees: state.eventAttendees.map((attendee) =>
-              attendee._id === bookingId
+              attendee.bookingId === bookingId
                 ? {
                     ...attendee,
-                    checkedIn: true,
-                    checkedInAt: new Date().toISOString(),
+                    isCheckedIn: true,
+                    checkInTime: new Date().toISOString(),
                   }
                 : attendee
             ),
@@ -665,10 +752,20 @@ export const useEventStore = create<EventState>()(
         set({ isLoading: true, error: null });
 
         try {
+          // Get the authentication token
+          const token = useAuthStore.getState().token;
+
+          if (!token) {
+            throw new Error("Authentication required. Please login first.");
+          }
+
           const data = await apiRequest(
             API_CONFIG.ENDPOINTS.BOOKINGS.VERIFY_QR,
             {
               method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
               body: JSON.stringify({ qrCode: qrCodeData }),
             }
           );
@@ -678,6 +775,130 @@ export const useEventStore = create<EventState>()(
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : "Failed to verify QR code";
+          set({ error: errorMessage, isLoading: false });
+          throw error;
+        }
+      },
+
+      verifyEventCode: async (
+        eventId: string,
+        verificationCode: string
+      ): Promise<QRVerificationResponse> => {
+        set({ isLoading: true, error: null });
+
+        try {
+          const token = useAuthStore.getState().token;
+          if (!token) {
+            throw new Error("Authentication required. Please login first.");
+          }
+          if (!eventId || !verificationCode) {
+            throw new Error("Event ID and verification code are required");
+          }
+
+          // Debug logging
+          console.log("Verifying event code with:", {
+            eventId,
+            verificationCode: verificationCode.slice(0, 3) + "...", // Don't log full code for security
+            endpoint: API_CONFIG.ENDPOINTS.BOOKINGS.VERIFY_EVENT,
+          });
+
+          let data: any;
+          try {
+            // Try with the most likely field names the backend expects
+            data = await apiRequest(
+              API_CONFIG.ENDPOINTS.BOOKINGS.VERIFY_EVENT,
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  event_id: eventId,
+                  verification_code: verificationCode,
+                }),
+              }
+            );
+          } catch (primaryError) {
+            const message =
+              primaryError instanceof Error
+                ? primaryError.message
+                : String(primaryError);
+            // Try alternative field names if the first attempt fails
+            try {
+              data = await apiRequest(
+                API_CONFIG.ENDPOINTS.BOOKINGS.VERIFY_EVENT,
+                {
+                  method: "POST",
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    eventId: eventId,
+                    verificationCode: verificationCode,
+                  }),
+                }
+              );
+            } catch (secondaryError) {
+              // Try with the alternate names from the retry logic
+              try {
+                data = await apiRequest(
+                  API_CONFIG.ENDPOINTS.BOOKINGS.VERIFY_EVENT,
+                  {
+                    method: "POST",
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      freeEventId: eventId,
+                      code: verificationCode,
+                    }),
+                  }
+                );
+              } catch (tertiaryError) {
+                // Final attempt with simple field names
+                data = await apiRequest(
+                  API_CONFIG.ENDPOINTS.BOOKINGS.VERIFY_EVENT,
+                  {
+                    method: "POST",
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      id: eventId,
+                      code: verificationCode,
+                    }),
+                  }
+                );
+              }
+            }
+          }
+
+          // If we can map booking id to attendee in current list, mark as checked-in
+          const maybeBookingId = data?.data?.booking?.id;
+          set((state) => ({
+            eventAttendees: state.eventAttendees.map((attendee) =>
+              attendee.bookingId === maybeBookingId
+                ? {
+                    ...attendee,
+                    isCheckedIn: true,
+                    checkInTime: new Date().toISOString(),
+                  }
+                : attendee
+            ),
+            isLoading: false,
+            error: null,
+          }));
+
+          return data;
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : "Failed to verify event code";
           set({ error: errorMessage, isLoading: false });
           throw error;
         }
