@@ -133,7 +133,7 @@ export default function TicketDetailsPage() {
             body { 
               font-family: 'Arial', sans-serif; 
               background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              padding: 40px 20px;
+              padding: 20px;
               min-height: 100vh;
             }
             .ticket {
@@ -148,23 +148,23 @@ export default function TicketDetailsPage() {
             .header {
               background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
               color: white;
-              padding: 30px;
+              padding: 20px;
               text-align: center;
             }
-            .logo { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
-            .ticket-title { font-size: 18px; opacity: 0.9; }
+            .logo { font-size: 20px; font-weight: bold; margin-bottom: 8px; }
+            .ticket-title { font-size: 16px; opacity: 0.9; }
             .content {
               display: grid;
-              grid-template-columns: 1fr 300px;
+              grid-template-columns: 1fr;
               min-height: 400px;
             }
             .left-section {
-              padding: 40px;
+              padding: 30px 20px;
               display: flex;
               flex-direction: column;
             }
             .event-title {
-              font-size: 28px;
+              font-size: 24px;
               font-weight: bold;
               color: #333;
               margin-bottom: 20px;
@@ -172,52 +172,97 @@ export default function TicketDetailsPage() {
             }
             .event-details {
               display: grid;
-              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-              gap: 20px;
-              margin-bottom: 30px;
+              grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+              gap: 15px;
+              margin-bottom: 25px;
             }
             .detail-item {
               display: flex;
               align-items: flex-start;
-              gap: 12px;
+              gap: 8px;
             }
             .detail-content h4 {
-              font-size: 14px;
+              font-size: 12px;
               color: #666;
               margin-bottom: 4px;
               text-transform: uppercase;
               letter-spacing: 0.5px;
             }
             .detail-content p {
-              font-size: 16px;
+              font-size: 14px;
               color: #333;
               font-weight: 600;
             }
-            .right-section {
+            .codes-section {
               background: #f8f9ff;
-              padding: 40px 30px;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
+              padding: 20px;
+              border-top: 2px dashed #ddd;
               text-align: center;
-              border-left: 2px dashed #ddd;
             }
             .code-box {
-              padding: 16px 20px;
+              padding: 12px 16px;
               background: #f3f4f6;
-              border-radius: 12px;
+              border-radius: 8px;
               border: 1px dashed #d1d5db;
               display: inline-block;
-              margin-bottom: 10px;
+              margin: 8px auto;
+              max-width: 100%;
             }
             .code-text {
               font-family: Menlo, Consolas, monospace;
               font-weight: 700;
-              font-size: 20px;
+              font-size: 18px;
               color: #111827;
-              letter-spacing: 4px;
+              letter-spacing: 2px;
+              word-break: break-all;
             }
+            .booking-ref {
+              font-size: 14px;
+              color: #666;
+              margin: 10px 0 8px 0;
+            }
+            .status-badge {
+              background: #10b981;
+              color: white;
+              padding: 6px 12px;
+              border-radius: 16px;
+              font-size: 12px;
+              font-weight: 600;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              margin-top: 8px;
+              display: inline-block;
+            }
+            .footer {
+              background: #f8f9fa;
+              padding: 15px 20px;
+              text-align: center;
+              color: #666;
+              font-size: 12px;
+              border-top: 1px solid #eee;
+            }
+            .attendee-info {
+              margin-bottom: 6px;
+              color: #6b7280;
+              font-size: 10px;
+            }
+            
+            @media (min-width: 768px) {
+              body { padding: 40px 20px; }
+              .header { padding: 30px; }
+              .logo { font-size: 24px; margin-bottom: 10px; }
+              .ticket-title { font-size: 18px; }
+              .content { grid-template-columns: 1fr 300px; }
+              .left-section { padding: 40px; }
+              .event-title { font-size: 28px; }
+              .event-details { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+              .detail-content h4 { font-size: 14px; }
+              .detail-content p { font-size: 16px; }
+              .codes-section { padding: 40px 30px; border-top: none; border-left: 2px dashed #ddd; }
+              .code-text { font-size: 20px; letter-spacing: 4px; }
+              .footer { padding: 20px 40px; font-size: 14px; }
+            }
+          </style>
             .booking-ref {
               font-size: 14px;
               color: #666;
@@ -284,9 +329,8 @@ export default function TicketDetailsPage() {
                     </div>
                   </div>
                 </div>
-              </div>
               
-              <div class="right-section">
+              <div class="codes-section">
                 <div class="booking-ref">Verification Codes</div>
                 ${
                   booking.verificationCodes &&
@@ -297,9 +341,9 @@ export default function TicketDetailsPage() {
                   <div class="code-box"><span class="code-text">${format343(
                     vc.code
                   )}</span></div>
-                  <div style="margin-bottom:8px;color:#6b7280;font-size:12px;">${
-                    vc.attendee.name
-                  } (${vc.attendee.email})</div>
+                  <div class="attendee-info">${vc.attendee.name} (${
+                            vc.attendee.email
+                          })</div>
                 `
                         )
                         .join("")
@@ -307,7 +351,7 @@ export default function TicketDetailsPage() {
                   <div class="code-box"><span class="code-text">${format343(
                     booking.paymentReference
                   )}</span></div>
-                  <div style="margin-bottom:8px;color:#6b7280;font-size:12px;">Main Ticket</div>
+                  <div class="attendee-info">Main Ticket</div>
                 `
                 }
                 <div class="status-badge">${booking.statusDisplay}</div>
@@ -354,17 +398,17 @@ export default function TicketDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-900 pt-20">
-        <div className="max-w-9xl mx-auto px-4 py-8">
+      <div className="min-h-screen bg-slate-900 pt-16 sm:pt-20">
+        <div className="max-w-9xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
           <div className="animate-pulse">
-            <div className="h-8 bg-slate-800 rounded w-1/4 mb-8"></div>
-            <div className="h-64 bg-slate-800 rounded-lg mb-8"></div>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="space-y-6">
+            <div className="h-6 sm:h-8 bg-slate-800 rounded w-1/2 sm:w-1/4 mb-6 sm:mb-8"></div>
+            <div className="h-48 sm:h-64 lg:h-80 bg-slate-800 rounded-lg mb-6 sm:mb-8"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+              <div className="space-y-4 sm:space-y-6">
                 <div className="h-32 bg-slate-800 rounded"></div>
                 <div className="h-48 bg-slate-800 rounded"></div>
               </div>
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 <div className="h-32 bg-slate-800 rounded"></div>
                 <div className="h-48 bg-slate-800 rounded"></div>
               </div>
@@ -377,22 +421,22 @@ export default function TicketDetailsPage() {
 
   if (error || !booking) {
     return (
-      <div className="min-h-screen bg-slate-900 pt-20">
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <div className="text-center py-16">
-            <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-white mb-4">
+      <div className="min-h-screen bg-slate-900 pt-16 sm:pt-20">
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
+          <div className="text-center py-12 sm:py-16">
+            <AlertCircle className="h-12 w-12 sm:h-16 sm:w-16 text-red-400 mx-auto mb-3 sm:mb-4" />
+            <h1 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">
               Ticket Not Found
             </h1>
-            <p className="text-gray-400 mb-8">
+            <p className="text-gray-400 mb-6 sm:mb-8 text-sm sm:text-base">
               {error || "The ticket you are looking for does not exist."}
             </p>
-            <div className="flex gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <Link
                 href="/my-tickets"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
               >
-                <ArrowLeft className="h-4 w-4" />
+                <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
                 Back to My Tickets
               </Link>
               {error && (
@@ -403,7 +447,7 @@ export default function TicketDetailsPage() {
                       fetchBookingById(params.id);
                     }
                   }}
-                  className="px-6 py-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors"
+                  className="px-4 sm:px-6 py-2.5 sm:py-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors text-sm"
                 >
                   Try Again
                 </button>
@@ -419,14 +463,14 @@ export default function TicketDetailsPage() {
   const endDate = formatDate(booking.event.endDate);
 
   return (
-    <div className="min-h-screen bg-slate-900 pt-20">
-      <div className="max-w-9xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-slate-900 pt-16 sm:pt-20">
+      <div className="max-w-9xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
         {/* Back Button */}
         <motion.button
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors"
+          className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-4 sm:mb-6 transition-colors text-sm sm:text-base"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to My Tickets
@@ -436,9 +480,9 @@ export default function TicketDetailsPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative rounded-2xl overflow-hidden mb-8"
+          className="relative rounded-xl sm:rounded-2xl overflow-hidden mb-6 sm:mb-8"
         >
-          <div className="relative h-64 sm:h-80">
+          <div className="relative h-48 sm:h-64 lg:h-80">
             <Image
               src={booking.event.images[0] || "/placeholder.jpg"}
               alt={booking.event.title}
@@ -448,35 +492,37 @@ export default function TicketDetailsPage() {
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
 
             {/* Event Info Overlay */}
-            <div className="absolute bottom-6 left-6 right-6">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-3 text-center">
-                  <div className="text-2xl font-bold text-gray-900">
+            <div className="absolute bottom-3 sm:bottom-6 left-3 sm:left-6 right-3 sm:right-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
+                <div className="bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 text-center shrink-0">
+                  <div className="text-xl sm:text-2xl font-bold text-gray-900">
                     {startDate.day}
                   </div>
-                  <div className="text-sm text-gray-600 uppercase font-medium">
+                  <div className="text-xs sm:text-sm text-gray-600 uppercase font-medium">
                     {startDate.month}
                   </div>
                 </div>
-                <div className="flex-1">
-                  <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-white mb-1 sm:mb-2 leading-tight">
                     {booking.event.title}
                   </h1>
-                  <div className="flex items-center gap-4 text-gray-200">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-200 text-xs sm:text-sm">
                     <span className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {startDate.time}
+                      <Clock className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                      <span className="truncate">{startDate.time}</span>
                     </span>
                     <span className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      {booking.event.venue.name}
+                      <MapPin className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                      <span className="truncate">
+                        {booking.event.venue.name}
+                      </span>
                     </span>
                   </div>
                 </div>
               </div>
 
               {/* Status Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-black/60 backdrop-blur-sm rounded-full">
+              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-black/60 backdrop-blur-sm rounded-full text-sm">
                 {getStatusIcon(booking.status, booking.paymentStatus)}
                 <span className="text-white font-medium">
                   {booking.statusDisplay}
@@ -487,57 +533,67 @@ export default function TicketDetailsPage() {
         </motion.div>
 
         {/* Main Content Grid */}
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
           {/* Left Column */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Ticket Information */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6"
+              className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg sm:rounded-xl p-4 sm:p-6"
             >
-              <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <Ticket className="h-5 w-5 text-purple-400" />
+              <h2 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2">
+                <Ticket className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400" />
                 Ticket Details
               </h2>
 
-              <div className="space-y-4">
-                <div className="flex justify-between items-center py-3 border-b border-slate-700/50">
-                  <span className="text-gray-400">Ticket Type</span>
-                  <span className="text-white font-medium">
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex justify-between items-center py-2 sm:py-3 border-b border-slate-700/50">
+                  <span className="text-gray-400 text-sm sm:text-base">
+                    Ticket Type
+                  </span>
+                  <span className="text-white font-medium text-sm sm:text-base truncate ml-2">
                     {booking.ticketType}
                   </span>
                 </div>
-                <div className="flex justify-between items-center py-3 border-b border-slate-700/50">
-                  <span className="text-gray-400">Quantity</span>
-                  <span className="text-white font-medium">
+                <div className="flex justify-between items-center py-2 sm:py-3 border-b border-slate-700/50">
+                  <span className="text-gray-400 text-sm sm:text-base">
+                    Quantity
+                  </span>
+                  <span className="text-white font-medium text-sm sm:text-base">
                     {booking.quantity}
                   </span>
                 </div>
-                <div className="flex justify-between items-center py-3 border-b border-slate-700/50">
-                  <span className="text-gray-400">Ticket Price</span>
-                  <span className="text-white font-medium">
+                <div className="flex justify-between items-center py-2 sm:py-3 border-b border-slate-700/50">
+                  <span className="text-gray-400 text-sm sm:text-base">
+                    Ticket Price
+                  </span>
+                  <span className="text-white font-medium text-sm sm:text-base">
                     {formatPrice(booking.totalAmount)}
                   </span>
                 </div>
-                <div className="flex justify-between items-center py-3 border-b border-slate-700/50">
-                  <span className="text-gray-400">Platform Fee</span>
-                  <span className="text-white font-medium">
+                <div className="flex justify-between items-center py-2 sm:py-3 border-b border-slate-700/50">
+                  <span className="text-gray-400 text-sm sm:text-base">
+                    Platform Fee
+                  </span>
+                  <span className="text-white font-medium text-sm sm:text-base">
                     {formatPrice(booking.platformFee)}
                   </span>
                 </div>
-                <div className="flex justify-between items-center py-3 border-b border-slate-700/50">
-                  <span className="text-gray-400">VAT</span>
-                  <span className="text-white font-medium">
+                <div className="flex justify-between items-center py-2 sm:py-3 border-b border-slate-700/50">
+                  <span className="text-gray-400 text-sm sm:text-base">
+                    VAT
+                  </span>
+                  <span className="text-white font-medium text-sm sm:text-base">
                     {formatPrice(booking.vat)}
                   </span>
                 </div>
-                <div className="flex justify-between items-center py-3 pt-4">
-                  <span className="text-lg font-semibold text-white">
+                <div className="flex justify-between items-center py-2 sm:py-3 pt-3 sm:pt-4">
+                  <span className="text-base sm:text-lg font-semibold text-white">
                     Total Paid
                   </span>
-                  <span className="text-xl font-bold text-purple-400">
+                  <span className="text-lg sm:text-xl font-bold text-purple-400">
                     {formatPrice(booking.finalAmount)}
                   </span>
                 </div>
@@ -549,18 +605,20 @@ export default function TicketDetailsPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6"
+              className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg sm:rounded-xl p-4 sm:p-6"
             >
-              <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <CreditCard className="h-5 w-5 text-purple-400" />
+              <h2 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2">
+                <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400" />
                 Payment Details
               </h2>
 
-              <div className="space-y-4">
-                <div className="flex justify-between items-center py-3 border-b border-slate-700/50">
-                  <span className="text-gray-400">Status</span>
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex justify-between items-center py-2 sm:py-3 border-b border-slate-700/50">
+                  <span className="text-gray-400 text-sm sm:text-base">
+                    Status
+                  </span>
                   <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(
+                    className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium border ${getStatusColor(
                       booking.status,
                       booking.paymentStatus
                     )}`}
@@ -569,35 +627,41 @@ export default function TicketDetailsPage() {
                       booking.paymentStatus.slice(1)}
                   </span>
                 </div>
-                <div className="flex justify-between items-center py-3 border-b border-slate-700/50">
-                  <span className="text-gray-400">Payment Reference</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-white font-mono text-sm">
+                <div className="flex justify-between items-start py-2 sm:py-3 border-b border-slate-700/50">
+                  <span className="text-gray-400 text-sm sm:text-base shrink-0">
+                    Payment Reference
+                  </span>
+                  <div className="flex items-center gap-2 ml-2">
+                    <span className="text-white font-mono text-xs sm:text-sm break-all">
                       {booking.paymentReference}
                     </span>
                     <button
                       onClick={handleCopyReference}
-                      className="p-1 text-gray-400 hover:text-white transition-colors"
+                      className="p-1 text-gray-400 hover:text-white transition-colors shrink-0"
                       title="Copy Reference"
                     >
                       {copied ? (
-                        <Check className="h-4 w-4 text-green-400" />
+                        <Check className="h-3 w-3 sm:h-4 sm:w-4 text-green-400" />
                       ) : (
-                        <Copy className="h-4 w-4" />
+                        <Copy className="h-3 w-3 sm:h-4 sm:w-4" />
                       )}
                     </button>
                   </div>
                 </div>
-                <div className="flex justify-between items-center py-3 border-b border-slate-700/50">
-                  <span className="text-gray-400">Purchase Date</span>
-                  <span className="text-white">
+                <div className="flex justify-between items-center py-2 sm:py-3 border-b border-slate-700/50">
+                  <span className="text-gray-400 text-sm sm:text-base">
+                    Purchase Date
+                  </span>
+                  <span className="text-white text-sm sm:text-base">
                     {formatDate(booking.createdAt).fullDate}
                   </span>
                 </div>
-                <div className="flex justify-between items-center py-3">
-                  <span className="text-gray-400">Check-in Status</span>
+                <div className="flex justify-between items-center py-2 sm:py-3">
+                  <span className="text-gray-400 text-sm sm:text-base">
+                    Check-in Status
+                  </span>
                   <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium border ${
+                    className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium border ${
                       booking.isCheckedIn
                         ? "bg-green-500/20 text-green-300 border-green-500/30"
                         : "bg-gray-500/20 text-gray-300 border-gray-500/30"
@@ -616,43 +680,45 @@ export default function TicketDetailsPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6"
+                  className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg sm:rounded-xl p-4 sm:p-6"
                 >
-                  <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                    <Users className="h-5 w-5 text-purple-400" />
+                  <h2 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2">
+                    <Users className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400" />
                     Attendee Information & Codes
                   </h2>
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {booking.verificationCodes.map((vc, index) => (
                       <div
                         key={vc.id || vc._id}
-                        className="bg-slate-700/30 rounded-lg p-4"
+                        className="bg-slate-700/30 rounded-lg p-3 sm:p-4"
                       >
                         {index > 0 && (
-                          <div className="border-t border-slate-700/50 -mt-4 mb-4" />
+                          <div className="border-t border-slate-700/50 -mt-3 sm:-mt-4 mb-3 sm:mb-4" />
                         )}
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="space-y-2 flex-1">
-                            <div className="flex items-center gap-2">
-                              <User className="h-4 w-4 text-purple-400" />
-                              <span className="text-white font-medium">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
+                          <div className="space-y-2 flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <User className="h-3 w-3 sm:h-4 sm:w-4 text-purple-400 shrink-0" />
+                              <span className="text-white font-medium text-sm sm:text-base truncate">
                                 {vc.attendee.name}
                               </span>
-                              <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-full">
+                              <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 sm:py-1 rounded-full shrink-0">
                                 Attendee {index + 1}
                               </span>
                             </div>
-                            <div className="flex items-center gap-2 text-gray-400 text-sm">
-                              <Mail className="h-4 w-4" />
-                              <span>{vc.attendee.email}</span>
+                            <div className="flex items-center gap-2 text-gray-400 text-xs sm:text-sm">
+                              <Mail className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                              <span className="truncate">
+                                {vc.attendee.email}
+                              </span>
                             </div>
-                            <div className="flex items-center gap-2 text-gray-400 text-sm">
-                              <Phone className="h-4 w-4" />
+                            <div className="flex items-center gap-2 text-gray-400 text-xs sm:text-sm">
+                              <Phone className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
                               <span>{vc.attendee.phone}</span>
                             </div>
-                            <div className="flex items-center gap-2 text-gray-300 text-sm">
-                              <Hash className="h-4 w-4 text-purple-400" />
-                              <span className="font-mono tracking-widest">
+                            <div className="flex flex-wrap items-center gap-2 text-gray-300 text-xs sm:text-sm">
+                              <Hash className="h-3 w-3 sm:h-4 sm:w-4 text-purple-400 shrink-0" />
+                              <span className="font-mono tracking-wider text-xs sm:text-sm">
                                 {format343(vc.code)}
                               </span>
                               {vc.isUsed && (
@@ -668,9 +734,9 @@ export default function TicketDetailsPage() {
                               setSelectedAttendee(vc.attendee.name);
                               setShowQRModal(true);
                             }}
-                            className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm"
+                            className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg transition-colors flex items-center gap-2 text-xs sm:text-sm shrink-0 w-full sm:w-auto justify-center"
                           >
-                            <Hash className="h-4 w-4" />
+                            <Hash className="h-3 w-3 sm:h-4 sm:w-4" />
                             View Code
                           </button>
                         </div>
@@ -682,16 +748,16 @@ export default function TicketDetailsPage() {
           </div>
 
           {/* Right Column */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Codes Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 text-center"
+              className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg sm:rounded-xl p-4 sm:p-6 text-center"
             >
-              <h2 className="text-xl font-bold text-white mb-6 flex items-center justify-center gap-2">
-                <Hash className="h-5 w-5 text-purple-400" />
+              <h2 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6 flex items-center justify-center gap-2">
+                <Hash className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400" />
                 {booking.verificationCodes &&
                 booking.verificationCodes.length > 1
                   ? "Entry Verification Codes"
@@ -700,12 +766,12 @@ export default function TicketDetailsPage() {
 
               {booking.verificationCodes &&
               booking.verificationCodes.length > 0 ? (
-                <div className="space-y-4">
-                  <p className="text-gray-400 text-sm mb-4">
+                <div className="space-y-3 sm:space-y-4">
+                  <p className="text-gray-400 text-xs sm:text-sm mb-3 sm:mb-4">
                     {booking.verificationCodes.length} individual codes for each
                     attendee
                   </p>
-                  <div className="grid gap-3">
+                  <div className="grid gap-2 sm:gap-3">
                     {booking.verificationCodes.slice(0, 2).map((vc, index) => (
                       <button
                         key={vc.id || vc._id || index}
@@ -714,13 +780,13 @@ export default function TicketDetailsPage() {
                           setSelectedAttendee(vc.attendee.name);
                           setShowQRModal(true);
                         }}
-                        className="flex items-center gap-3 p-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-colors text-left"
+                        className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-colors text-left"
                       >
-                        <div className="bg-white rounded p-2">
-                          <Hash className="h-6 w-6 text-gray-800" />
+                        <div className="bg-white rounded p-1.5 sm:p-2 shrink-0">
+                          <Hash className="h-4 w-4 sm:h-6 sm:w-6 text-gray-800" />
                         </div>
-                        <div>
-                          <div className="text-white font-medium text-sm">
+                        <div className="min-w-0 flex-1">
+                          <div className="text-white font-medium text-xs sm:text-sm truncate">
                             {vc.attendee.name}
                           </div>
                           <div className="text-gray-400 text-xs font-mono">
@@ -730,7 +796,7 @@ export default function TicketDetailsPage() {
                       </button>
                     ))}
                     {booking.verificationCodes.length > 2 && (
-                      <div className="text-gray-400 text-sm">
+                      <div className="text-gray-400 text-xs sm:text-sm">
                         +{booking.verificationCodes.length - 2} more codes
                         available in attendee section
                       </div>
@@ -739,36 +805,36 @@ export default function TicketDetailsPage() {
                 </div>
               ) : (
                 <div>
-                  <div className="rounded-xl p-6 mb-6 inline-block bg-white">
-                    <div className="text-gray-600 text-sm mb-2 text-center">
+                  <div className="rounded-lg sm:rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 inline-block bg-white max-w-full">
+                    <div className="text-gray-600 text-xs sm:text-sm mb-2 text-center">
                       Verification Code
                     </div>
-                    <div className="font-mono text-3xl font-bold tracking-widest text-gray-900">
+                    <div className="font-mono text-xl sm:text-2xl lg:text-3xl font-bold tracking-wider sm:tracking-widest text-gray-900 break-all">
                       {format343(booking.paymentReference)}
                     </div>
                   </div>
 
-                  <p className="text-gray-400 text-sm mb-6">
+                  <p className="text-gray-400 text-xs sm:text-sm mb-4 sm:mb-6">
                     Present this code at the venue entrance for check-in
                   </p>
 
-                  <div className="flex gap-3">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                     <button
                       onClick={() => {
                         setSelectedQR(booking.paymentReference);
                         setSelectedAttendee("Main Ticket");
                         setShowQRModal(true);
                       }}
-                      className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+                      className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
                     >
-                      <Hash className="h-4 w-4" />
+                      <Hash className="h-3 w-3 sm:h-4 sm:w-4" />
                       View Full Size
                     </button>
                     <button
                       onClick={handleDownloadTicket}
-                      className="flex-1 bg-slate-700 hover:bg-slate-600 text-white px-4 py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+                      className="flex-1 bg-slate-700 hover:bg-slate-600 text-white px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
                     >
-                      <Download className="h-4 w-4" />
+                      <Download className="h-3 w-3 sm:h-4 sm:w-4" />
                       Download Ticket
                     </button>
                   </div>
@@ -781,56 +847,60 @@ export default function TicketDetailsPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6"
+              className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg sm:rounded-xl p-4 sm:p-6"
             >
-              <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-purple-400" />
+              <h2 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2">
+                <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400" />
                 Event Information
               </h2>
 
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <Calendar className="h-5 w-5 text-purple-400 mt-0.5" />
-                  <div>
-                    <p className="text-gray-400 text-sm">Date & Time</p>
-                    <p className="text-white font-medium">
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400 mt-0.5 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-gray-400 text-xs sm:text-sm">
+                      Date & Time
+                    </p>
+                    <p className="text-white font-medium text-sm sm:text-base">
                       {startDate.fullDate}
                     </p>
-                    <p className="text-gray-300 text-sm">{startDate.time}</p>
+                    <p className="text-gray-300 text-xs sm:text-sm">
+                      {startDate.time}
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3">
-                  <MapPin className="h-5 w-5 text-purple-400 mt-0.5" />
-                  <div>
-                    <p className="text-gray-400 text-sm">Venue</p>
-                    <p className="text-white font-medium">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400 mt-0.5 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-gray-400 text-xs sm:text-sm">Venue</p>
+                    <p className="text-white font-medium text-sm sm:text-base">
                       {booking.event.venue.name}
                     </p>
-                    <p className="text-gray-300 text-sm">
+                    <p className="text-gray-300 text-xs sm:text-sm">
                       {booking.event.venue.address}
                     </p>
-                    <p className="text-gray-300 text-sm">
+                    <p className="text-gray-300 text-xs sm:text-sm">
                       {booking.event.venue.city}, {booking.event.venue.state}
                     </p>
                   </div>
                 </div>
 
-                <div className="pt-4">
+                <div className="pt-3 sm:pt-4">
                   <button
                     onClick={openGoogleMaps}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
                   >
-                    <Navigation className="h-4 w-4" />
+                    <Navigation className="h-3 w-3 sm:h-4 sm:w-4" />
                     Open in Google Maps
                   </button>
                 </div>
 
                 {/* Map Preview */}
-                <div className="pt-6">
-                  <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <div className="pt-4 sm:pt-6">
+                  <h4 className="text-base sm:text-lg font-semibold text-white mb-2 sm:mb-3 flex items-center gap-2">
                     <svg
-                      className="w-5 h-5"
+                      className="w-4 h-4 sm:w-5 sm:h-5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -850,7 +920,7 @@ export default function TicketDetailsPage() {
                     </svg>
                     Location Preview
                   </h4>
-                  <div className="relative w-full h-64 bg-slate-700/50 rounded-lg overflow-hidden border border-slate-600/50">
+                  <div className="relative w-full h-48 sm:h-56 lg:h-64 bg-slate-700/50 rounded-lg overflow-hidden border border-slate-600/50">
                     <iframe
                       src={`https://maps.google.com/maps?q=${booking.event.venue.coordinates.latitude},${booking.event.venue.coordinates.longitude}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
                       width="100%"
@@ -861,10 +931,10 @@ export default function TicketDetailsPage() {
                       referrerPolicy="no-referrer-when-downgrade"
                       className="rounded-lg"
                     />
-                    <div className="absolute top-3 right-3">
+                    <div className="absolute top-2 sm:top-3 right-2 sm:right-3">
                       <button
                         onClick={openGoogleMaps}
-                        className="bg-white/90 backdrop-blur-sm shadow-lg px-3 py-1.5 rounded text-sm text-blue-600 hover:bg-blue-50 transition-colors"
+                        className="bg-white/90 backdrop-blur-sm shadow-lg px-2 sm:px-3 py-1 sm:py-1.5 rounded text-xs sm:text-sm text-blue-600 hover:bg-blue-50 transition-colors"
                       >
                         View Full Map
                       </button>
@@ -879,29 +949,29 @@ export default function TicketDetailsPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6"
+              className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg sm:rounded-xl p-4 sm:p-6"
             >
-              <h2 className="text-xl font-bold text-white mb-6">
+              <h2 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">
                 Quick Actions
               </h2>
 
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 <Link
                   href={`/events/${booking.event.id}`}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
                 >
-                  <Star className="h-4 w-4" />
+                  <Star className="h-3 w-3 sm:h-4 sm:w-4" />
                   View Event Details
                 </Link>
 
                 <button
                   onClick={handleCopyReference}
-                  className="w-full bg-slate-700 hover:bg-slate-600 text-white px-4 py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="w-full bg-slate-700 hover:bg-slate-600 text-white px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
                 >
                   {copied ? (
-                    <Check className="h-4 w-4" />
+                    <Check className="h-3 w-3 sm:h-4 sm:w-4" />
                   ) : (
-                    <Share2 className="h-4 w-4" />
+                    <Share2 className="h-3 w-3 sm:h-4 sm:w-4" />
                   )}
                   {copied ? "Reference Copied!" : "Share Ticket"}
                 </button>
@@ -918,38 +988,38 @@ export default function TicketDetailsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4"
             onClick={() => setShowQRModal(false)}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-2xl p-8 max-w-md w-full text-center"
+              className="bg-white rounded-xl sm:rounded-2xl p-6 sm:p-8 max-w-sm sm:max-w-md w-full text-center mx-4"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">
                 Entry Verification Code
               </h3>
-              <div className="bg-gray-100 rounded-xl p-6 mb-4">
-                <div className="text-gray-600 text-sm mb-2">
+              <div className="bg-gray-100 rounded-lg sm:rounded-xl p-4 sm:p-6 mb-3 sm:mb-4">
+                <div className="text-gray-600 text-xs sm:text-sm mb-2">
                   Verification Code for:
                 </div>
-                <div className="font-medium text-gray-900 mb-2">
+                <div className="font-medium text-gray-900 mb-2 text-sm sm:text-base">
                   {selectedAttendee || "Main Ticket"}
                 </div>
-                <div className="font-mono text-3xl font-bold tracking-widest text-gray-900">
+                <div className="font-mono text-2xl sm:text-3xl font-bold tracking-wider sm:tracking-widest text-gray-900 break-all">
                   {format343(selectedQR || booking?.paymentReference || "")}
                 </div>
               </div>
-              <div className="text-center mb-4">
-                <p className="text-gray-600 text-sm">
+              <div className="text-center mb-3 sm:mb-4">
+                <p className="text-gray-600 text-xs sm:text-sm">
                   {booking.event.title} - {booking.ticketType}
                 </p>
               </div>
               <button
                 onClick={() => setShowQRModal(false)}
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl transition-colors"
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2.5 sm:py-3 rounded-lg sm:rounded-xl transition-colors text-sm sm:text-base"
               >
                 Close
               </button>
